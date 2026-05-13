@@ -83,7 +83,6 @@ export default function Telekonsultasi() {
                   {doc.available ? 'Tersedia' : 'Penuh'}
                 </div>
               </div>
-
               <div className="mb-3">
                 <h3 className="font-bold leading-snug flex items-center gap-1.5" style={{ color:'var(--t-primary)' }}>
                   {doc.name}<BadgeCheck className="w-4 h-4 text-brand-400 shrink-0"/>

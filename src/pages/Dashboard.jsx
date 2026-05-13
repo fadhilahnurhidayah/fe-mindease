@@ -16,7 +16,7 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSleep, setSelectedSleep] = useState(null);
   const [selectedBurden, setSelectedBurden] = useState(null);
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const API_URL = 'http://localhost:5000/api';
 
   const fetchMoods = async () => {
@@ -103,10 +103,14 @@ export default function Dashboard() {
       <div className="text-center space-y-2 pt-4">
         <p className="text-sm font-medium tracking-wider uppercase" style={T.muted}>{greetEmoji} {greeting}</p>
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-          Halo, <span className="gradient-text">Dila!</span>
+          {user ? (
+            <>Halo, <span className="gradient-text">{user.username}!</span></>
+          ) : (
+            <>Halo, <span className="gradient-text">Sobat!</span></>
+          )}
         </h1>
         <p className="text-base md:text-lg max-w-md mx-auto" style={T.secondary}>
-          Bagaimana perasaanmu hari ini? Yuk ceritakan.
+          {user ? 'Bagaimana perasaanmu hari ini? Yuk ceritakan.' : 'Login untuk menyimpan riwayat mood dan catatanmu.'}
         </p>
       </div>
 
