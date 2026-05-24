@@ -20,20 +20,43 @@ export default function Chatbot() {
       scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = (e, override = null) => {
+  const handleSend = async (e, override = null) => {
     if (e) e.preventDefault();
     const text = override ?? input;
     if (!text.trim()) return;
     setMessages(prev => [...prev, { id: Date.now(), sender: 'user', text }]);
     setInput('');
     setIsLoading(true);
-    setTimeout(() => {
+    
+    try {
+      const res = await fetch('http://localhost:5000/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: text }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Gagal tersambung ke server');
+      }
+
+      const data = await res.json();
       setMessages(prev => [...prev, {
-        id: Date.now()+1, sender: 'ai',
-        text: 'Saya mengerti perasaanmu. Memang wajar merasa lelah saat beban menumpuk. Ingatlah untuk mengambil jeda sejenak ya. Apakah kamu ingin saya pandu latihan pernapasan singkat?'
+        id: Date.now() + 1,
+        sender: 'ai',
+        text: data.reply
       }]);
+    } catch (err) {
+      console.error(err);
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        sender: 'ai',
+        text: 'Maaf, sepertinya saya sedang mengalami gangguan koneksi ke server MindEase. Pastikan backend server Anda sudah menyala ya! 💚'
+      }]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (
