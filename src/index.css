@@ -162,11 +162,6 @@
     border-color: var(--border-act);
     box-shadow:0 0 0 3px rgba(22,160,160,.15);
   }
-  
-  select.input-field option {
-    background: var(--bg-surface);
-    color: var(--t-primary);
-  }
 
   .gradient-text {
     background:linear-gradient(135deg,#5dcfcf 0%,#16a0a0 50%,#99e5e5 100%);

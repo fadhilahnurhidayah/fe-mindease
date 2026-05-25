@@ -79,7 +79,7 @@ export default function Chatbot() {
 
         {messages.map(msg => (
           <div key={msg.id} className={`flex ${msg.sender==='user' ? 'justify-end' : 'justify-start'} animate-slide-up`}>
-            <div className={`flex gap-3 max-w-[82%] ${msg.sender==='user' ? 'flex-row-reverse' : 'flex-row'}`}>
+            <div className={`flex gap-3 max-w-[90%] sm:max-w-[82%] ${msg.sender==='user' ? 'flex-row-reverse' : 'flex-row'}`}>
               <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 self-end"
                    style={msg.sender==='ai'
                      ? { background:'linear-gradient(135deg,#16a0a0,#0e6363)', boxShadow:'0 2px 10px rgba(22,160,160,0.35)' }

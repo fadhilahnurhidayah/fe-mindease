@@ -17,7 +17,16 @@ export default function Dashboard() {
   const [selectedSleep, setSelectedSleep] = useState(null);
   const [selectedBurden, setSelectedBurden] = useState(null);
   const { token, user } = useAuth();
+  const [settings, setSettings] = useState({});
   const API_URL = 'http://localhost:5000/api';
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch(`${API_URL}/public/settings`);
+      if (res.ok) setSettings(await res.json());
+    } catch (e) { console.error(e); }
+  };
+  useEffect(() => { fetchSettings(); }, []);
 
   const fetchMoods = async () => {
     if (!token) return;
@@ -110,7 +119,7 @@ export default function Dashboard() {
           )}
         </h1>
         <p className="text-base md:text-lg max-w-md mx-auto" style={T.secondary}>
-          {user ? 'Bagaimana perasaanmu hari ini? Yuk ceritakan.' : 'Login untuk menyimpan riwayat mood dan catatanmu.'}
+          {user ? (settings.dashboard_greeting || 'Bagaimana perasaanmu hari ini? Yuk ceritakan.') : 'Login untuk menyimpan riwayat mood dan catatanmu.'}
         </p>
       </div>
 
@@ -128,7 +137,7 @@ export default function Dashboard() {
           <Sparkles className="w-5 h-5 text-brand-400" />
           <h2 className="font-semibold" style={T.primary}>Pilih Mood Hari Ini</h2>
         </div>
-        <div className="grid grid-cols-3 gap-3 md:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-5">
           {moodsConfig.map(mood => {
             const sel = selectedMood === mood.id;
             return (
@@ -175,8 +184,7 @@ export default function Dashboard() {
             <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background:'rgba(99,102,241,0.15)' }}>
               <Moon className="w-4 h-4 text-indigo-400"/>
             </div>
-            <h3 className="font-semibold text-sm flex-1" style={T.primary}>Berapa lama kamu tidur?</h3>
-            {selectedSleep && <span className="text-xs text-indigo-500 font-bold animate-fade-in">✓ Tersimpan</span>}
+            <h3 className="font-semibold text-sm" style={T.primary}>Berapa lama kamu tidur?</h3>
           </div>
           <div className="space-y-2">
             {['Kurang dari 5 jam','5–7 jam','Lebih dari 8 jam'].map(opt => (
@@ -195,8 +203,7 @@ export default function Dashboard() {
             <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background:'rgba(236,72,153,0.15)' }}>
               <Target className="w-4 h-4 text-pink-400"/>
             </div>
-            <h3 className="font-semibold text-sm flex-1" style={T.primary}>Fokus utama hari ini?</h3>
-            {selectedBurden && <span className="text-xs text-pink-500 font-bold animate-fade-in">✓ Tersimpan</span>}
+            <h3 className="font-semibold text-sm" style={T.primary}>Fokus utama hari ini?</h3>
           </div>
           <div className="flex flex-wrap gap-2">
             {['Pekerjaan','Tugas Kuliah','Keluarga','Kesehatan','Keuangan','Healing'].map(opt => (

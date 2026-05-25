@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { HeartPulse, LayoutDashboard, Users, MessageCircle, CalendarHeart, LogOut, LogIn, UserPlus, Sun, Moon, Menu, X, Settings as SettingsIcon } from 'lucide-react';
+import { HeartPulse, LayoutDashboard, Users, MessageCircle, CalendarHeart, LogOut, LogIn, UserPlus, Sun, Moon, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -14,6 +14,7 @@ export default function Navbar() {
     { name: 'Dashboard',      path: '/',           icon: <LayoutDashboard className="w-4 h-4" /> },
     { name: 'Safe Space',     path: '/komunitas',  icon: <Users className="w-4 h-4" /> },
     { name: 'AI Chat',        path: '/chat',       icon: <MessageCircle className="w-4 h-4" /> },
+    { name: 'Telekonsultasi', path: '/konsultasi', icon: <CalendarHeart className="w-4 h-4" /> },
   ];
 
   if (user && user.role === 'admin') {
@@ -101,26 +102,15 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            <>
-              <Link to="/settings"
-                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl transition-colors"
-                style={{ color: 'var(--t-secondary)' }}
-                onMouseEnter={e => e.currentTarget.style.color = 'var(--t-primary)'}
-                onMouseLeave={e => e.currentTarget.style.color = 'var(--t-secondary)'}
-              >
-                <SettingsIcon className="w-4 h-4" />
-                Pengaturan
-              </Link>
-              <button onClick={logout}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-rose-400 hover:text-rose-300 rounded-xl transition-colors"
-                style={{ background: 'transparent' }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <LogOut className="w-4 h-4" />
-                Logout
-              </button>
-            </>
+            <button onClick={logout}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-rose-400 hover:text-rose-300 rounded-xl transition-colors"
+              style={{ background: 'transparent' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
           )}
         </div>
 
@@ -180,19 +170,11 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
-              <Link to="/settings" onClick={() => setIsMobileMenuOpen(false)}
-                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium rounded-xl"
-                style={{ background: 'var(--bg-subtle)', color: 'var(--t-primary)' }}>
-                <SettingsIcon className="w-4 h-4" />
-                Pengaturan Akun
-              </Link>
-              <button onClick={() => { logout(); setIsMobileMenuOpen(false); }}
-                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium text-rose-500 bg-rose-500/10 rounded-xl">
-                <LogOut className="w-4 h-4" />
-                Logout
-              </button>
-            </div>
+            <button onClick={() => { logout(); setIsMobileMenuOpen(false); }}
+              className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium text-rose-500 bg-rose-500/10 rounded-xl">
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
           )}
         </div>
       )}

@@ -2,9 +2,9 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import Chatbot from './pages/Chatbot';
+import Telekonsultasi from './pages/Telekonsultasi';
 import Komunitas from './pages/Komunitas';
 import AdminDashboard from './pages/AdminDashboard';
-import Settings from './pages/Settings';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import AuthModal from './components/AuthModal';
@@ -14,7 +14,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
-          <div className="h-screen w-full flex flex-col relative overflow-hidden"
+          <div className="min-h-screen w-full flex flex-col relative overflow-hidden"
                style={{ background: 'var(--bg-base)', transition: 'background 0.35s ease' }}>
 
             {/* Ambient blobs */}
@@ -40,8 +40,8 @@ function App() {
                   <Route path="/"           element={<Dashboard />} />
                   <Route path="/komunitas"  element={<Komunitas />} />
                   <Route path="/chat"       element={<Chatbot />} />
+                  <Route path="/konsultasi" element={<Telekonsultasi />} />
                   <Route path="/admin"      element={<AdminDashboard />} />
-                  <Route path="/settings"   element={<Settings />} />
                 </Routes>
               </div>
             </main>
