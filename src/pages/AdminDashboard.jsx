@@ -33,11 +33,15 @@ export default function AdminDashboard() {
   const [stats, setStats]       = useState({ users: 0, posts: 0 });
   const [posts, setPosts]       = useState([]);
   const [users, setUsers]       = useState([]);
+  const [channels, setChannels] = useState([]);
+  const [selectedPosts, setSelectedPosts] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [showChannelModal, setShowChannelModal] = useState(false);
   const [editUser, setEditUser] = useState(null);
   const [userForm, setUserForm] = useState({ username: '', email: '', password: '', role: 'user' });
+  const [channelForm, setChannelForm] = useState({ name: '', slug: '', description: '' });
   const API_URL = 'http://localhost:5000/api';
 
   useEffect(() => {
@@ -48,16 +52,18 @@ export default function AdminDashboard() {
     setIsLoading(true);
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const [statsRes, postsRes, usersRes, analyticsRes] = await Promise.all([
+      const [statsRes, postsRes, usersRes, analyticsRes, channelsRes] = await Promise.all([
         fetch(`${API_URL}/admin/stats`, { headers }),
         fetch(`${API_URL}/admin/posts`, { headers }),
         fetch(`${API_URL}/admin/users`, { headers }),
         fetch(`${API_URL}/admin/analytics`, { headers }),
+        fetch(`${API_URL}/posts/channels`),
       ]);
       if (statsRes.ok)     setStats(await statsRes.json());
       if (postsRes.ok)     setPosts(await postsRes.json());
       if (usersRes.ok)     setUsers(await usersRes.json());
       if (analyticsRes.ok) setAnalytics(await analyticsRes.json());
+      if (channelsRes.ok)  setChannels(await channelsRes.json());
     } catch (e) {
       console.error(e);
     } finally {
@@ -71,6 +77,92 @@ export default function AdminDashboard() {
       const res = await fetch(`${API_URL}/admin/posts/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
       if (res.ok) fetchData();
     } catch (e) { console.error(e); }
+  };
+
+  const handleBulkDeletePosts = async () => {
+    if (selectedPosts.length === 0) return;
+    if (!window.confirm(`Yakin ingin menghapus ${selectedPosts.length} postingan terpilih?`)) return;
+    try {
+      const res = await fetch(`${API_URL}/admin/posts/bulk-delete`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json', 
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ ids: selectedPosts })
+      });
+      if (res.ok) {
+        setSelectedPosts([]);
+        fetchData();
+      } else {
+        const err = await res.json();
+        alert(`Gagal: ${err.error}`);
+      }
+    } catch (e) { 
+      console.error(e); 
+    }
+  };
+
+  const handleCreateChannel = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API_URL}/admin/channels`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json', 
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify(channelForm)
+      });
+      if (res.ok) {
+        setShowChannelModal(false);
+        setChannelForm({ name: '', slug: '', description: '' });
+        fetchData();
+      } else {
+        const err = await res.json();
+        alert(`Gagal membuat saluran: ${err.error}`);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteChannel = async (slug) => {
+    if (slug === 'curhat-umum') {
+      alert('Saluran umum bawaan tidak dapat dihapus!');
+      return;
+    }
+    if (!window.confirm(`Yakin ingin menghapus saluran #${slug}? Seluruh postingan dalam saluran ini juga akan terhapus!`)) return;
+    try {
+      const res = await fetch(`${API_URL}/admin/channels/${slug}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        fetchData();
+      } else {
+        const err = await res.json();
+        alert(`Gagal menghapus saluran: ${err.error}`);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleSelectPost = (id) => {
+    if (selectedPosts.includes(id)) {
+      setSelectedPosts(prev => prev.filter(x => x !== id));
+    } else {
+      setSelectedPosts(prev => [...prev, id]);
+    }
+  };
+
+  const handleSelectAllPosts = () => {
+    if (selectedPosts.length === posts.length) {
+      setSelectedPosts([]);
+    } else {
+      setSelectedPosts(posts.map(p => p.id));
+    }
   };
 
   const handleDeleteUser = async (id, username) => {
@@ -363,30 +455,124 @@ export default function AdminDashboard() {
         )}
       </div>
 
+      {/* Channel Management Table */}
+      <div className="glass-card p-6 animate-slide-up">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h2 className="text-xl font-bold">Manajemen Saluran Obrolan</h2>
+            <p className="text-xs text-[var(--t-muted)] font-medium">Buat atau hapus saluran obrolan Ruang Aman secara dinamis.</p>
+          </div>
+          <button onClick={() => setShowChannelModal(true)} className="btn-primary px-3 py-1.5 text-sm rounded-lg flex items-center gap-2">
+            <Plus className="w-4 h-4" /> Tambah Saluran
+          </button>
+        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-rose-400" /></div>
+        ) : channels.length === 0 ? (
+          <p className="text-center py-10 text-sm" style={{ color: 'var(--t-muted)' }}>Belum ada saluran obrolan.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse" style={{ color: 'var(--t-primary)' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--t-secondary)' }}>
+                  <th className="py-3 px-2 text-sm font-semibold">Slug / ID</th>
+                  <th className="py-3 px-2 text-sm font-semibold">Nama Saluran</th>
+                  <th className="py-3 px-2 text-sm font-semibold">Deskripsi</th>
+                  <th className="py-3 px-2 text-sm font-semibold text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {channels.map(chan => (
+                  <tr key={chan.slug} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td className="py-3 px-2 text-xs font-mono font-semibold" style={{ color: 'var(--t-brand)' }}>#{chan.slug}</td>
+                    <td className="py-3 px-2 text-sm font-bold text-[var(--t-primary)]">{chan.name}</td>
+                    <td className="py-3 px-2 text-xs" style={{ color: 'var(--t-secondary)' }}>
+                      {chan.description || 'Tidak ada deskripsi'}
+                    </td>
+                    <td className="py-3 px-2 text-center flex items-center justify-center">
+                      <button onClick={() => handleDeleteChannel(chan.slug)}
+                        className="text-rose-500 hover:bg-rose-500/10 p-1.5 rounded-lg transition-colors"
+                        disabled={chan.slug === 'curhat-umum'}
+                        style={{ opacity: chan.slug === 'curhat-umum' ? 0.3 : 1, cursor: chan.slug === 'curhat-umum' ? 'not-allowed' : 'pointer' }}
+                        title={chan.slug === 'curhat-umum' ? "Saluran utama tidak bisa dihapus" : "Hapus Saluran"}>
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       {/* Post Moderation */}
-      <div className="glass-card p-6">
-        <h2 className="text-xl font-bold mb-4">Moderasi Safe Space</h2>
+      <div className="glass-card p-6 animate-slide-up">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <div>
+            <h2 className="text-xl font-bold">Moderasi Safe Space</h2>
+            <p className="text-xs text-[var(--t-muted)] font-medium">Hapus postingan anonim yang dinilai tidak pantas secara massal.</p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {posts.length > 0 && (
+              <button
+                onClick={handleSelectAllPosts}
+                className="btn-ghost border border-[var(--border)] px-3 py-1.5 text-xs rounded-lg font-semibold"
+              >
+                {selectedPosts.length === posts.length ? 'Batal Pilih Semua' : 'Pilih Semua'}
+              </button>
+            )}
+            
+            {selectedPosts.length > 0 && (
+              <button
+                onClick={handleBulkDeletePosts}
+                className="bg-rose-500 hover:bg-rose-600 text-white px-3.5 py-1.5 text-xs rounded-lg flex items-center gap-1.5 font-bold shadow-md animate-fade-in"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Hapus Terpilih ({selectedPosts.length})
+              </button>
+            )}
+          </div>
+        </div>
+
         {isLoading ? (
           <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-rose-400" /></div>
         ) : posts.length === 0 ? (
           <p className="text-center py-10 text-sm" style={{ color: 'var(--t-muted)' }}>Belum ada postingan di komunitas.</p>
         ) : (
-          <div className="space-y-4">
-            {posts.map(post => (
-              <div key={post.id} className="p-4 rounded-xl border flex justify-between gap-4" style={{ background: 'var(--bg-subtle)', borderColor: 'var(--border)' }}>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-rose-500/10 text-rose-400">ID: {post.id}</span>
-                    <span className="text-xs font-semibold" style={{ color: 'var(--t-primary)' }}>@{post.username}</span>
-                    <span className="text-xs" style={{ color: 'var(--t-muted)' }}>{new Date(post.created_at).toLocaleString('id-ID')}</span>
+          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+            {posts.map(post => {
+              const isChecked = selectedPosts.includes(post.id);
+              return (
+                <div key={post.id} 
+                     className={`p-4 rounded-xl border flex items-start gap-4 transition-all duration-150 ${isChecked ? 'border-rose-500 bg-rose-500/5 shadow-[0_0_15px_rgba(244,63,94,0.05)]' : 'border-[var(--border)] bg-[var(--bg-subtle)]'}`}>
+                  
+                  {/* Select Checkbox */}
+                  <div className="pt-1 select-none">
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => handleSelectPost(post.id)}
+                      className="w-4 h-4 cursor-pointer accent-rose-500"
+                    />
                   </div>
-                  <p className="text-sm" style={{ color: 'var(--t-secondary)' }}>{post.content}</p>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1.5">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 shrink-0">ID: {post.id}</span>
+                      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-400 shrink-0 uppercase tracking-wider">#{post.channel_slug || 'curhat-umum'}</span>
+                      <span className="text-xs font-bold text-[var(--t-primary)]">@{post.username}</span>
+                      <span className="text-[10px] text-[var(--t-muted)] font-medium">{new Date(post.created_at).toLocaleString('id-ID')}</span>
+                    </div>
+                    <p className="text-sm leading-relaxed text-[var(--t-secondary)] break-words">{post.content}</p>
+                  </div>
+                  
+                  <button onClick={() => handleDeletePost(post.id)} className="shrink-0 text-rose-500 hover:bg-rose-500/10 p-2 rounded-lg self-start transition-colors">
+                    <Trash2 className="w-5 h-5" />
+                  </button>
                 </div>
-                <button onClick={() => handleDeletePost(post.id)} className="shrink-0 text-rose-500 hover:bg-rose-500/10 p-2 rounded-lg self-start transition-colors">
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -441,6 +627,50 @@ export default function AdminDashboard() {
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowUserModal(false)} className="px-4 py-2 rounded-xl text-sm font-semibold transition-colors" style={{ color: 'var(--t-secondary)', backgroundColor: 'var(--bg-subtle)' }}>Batal</button>
                 <button type="submit" className="btn-primary px-4 py-2 rounded-xl text-sm font-semibold">{editUser ? 'Simpan Perubahan' : 'Tambah Pengguna'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Channel Modal */}
+      {showChannelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="glass-card p-6 w-full max-w-md mx-4 relative">
+            <button onClick={() => setShowChannelModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-rose-500 transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-xl font-bold mb-4">Buat Saluran Obrolan Baru</h2>
+            
+            <form onSubmit={handleCreateChannel} className="space-y-4">
+              <div>
+                <label className="block text-sm mb-1" style={{ color: 'var(--t-secondary)' }}>Nama Saluran</label>
+                <input type="text" required
+                  value={channelForm.name} onChange={e => {
+                    const val = e.target.value;
+                    const autoSlug = val.toLowerCase().trim().replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '-');
+                    setChannelForm({...channelForm, name: val, slug: autoSlug});
+                  }}
+                  className="input-field w-full" placeholder="Contoh: 💬-curhat-kerjaan atau #healing-tips" />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-1" style={{ color: 'var(--t-secondary)' }}>Slug Saluran (Otomatis/Manual)</label>
+                <input type="text" required
+                  value={channelForm.slug} onChange={e => setChannelForm({...channelForm, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '-')})}
+                  className="input-field w-full font-mono text-xs" placeholder="curhat-kerjaan" />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-1" style={{ color: 'var(--t-secondary)' }}>Deskripsi Saluran (Opsional)</label>
+                <textarea
+                  value={channelForm.description} onChange={e => setChannelForm({...channelForm, description: e.target.value})}
+                  className="input-field w-full text-xs min-h-[80px] resize-none" placeholder="Masukkan deskripsi singkat fungsi saluran..." />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setShowChannelModal(false)} className="px-4 py-2 rounded-xl text-sm font-semibold transition-colors" style={{ color: 'var(--t-secondary)', backgroundColor: 'var(--bg-subtle)' }}>Batal</button>
+                <button type="submit" className="btn-primary px-4 py-2 rounded-xl text-sm font-semibold">Buat Saluran</button>
               </div>
             </form>
           </div>

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Settings as SettingsIcon, User, Mail, Lock, Loader2, Save } from 'lucide-react';
+import { Settings as SettingsIcon, User, Mail, Lock, Loader2, Save, Calendar, Users } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 
 export default function Settings() {
   const { token, user, logout } = useAuth();
-  const [formData, setFormData] = useState({ username: '', email: '', password: '' });
+  const [formData, setFormData] = useState({ username: '', email: '', password: '', birth_date: '', gender: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   const API_URL = 'http://localhost:5000/api';
@@ -19,7 +19,13 @@ export default function Settings() {
       const res = await fetch(`${API_URL}/auth/profile`, { headers: { Authorization: `Bearer ${token}` } });
       if (res.ok) {
         const data = await res.json();
-        setFormData({ username: data.username, email: data.email || '', password: '' });
+        setFormData({ 
+          username: data.username, 
+          email: data.email || '', 
+          password: '',
+          birth_date: data.birth_date || '',
+          gender: data.gender || ''
+        });
       }
     } catch (err) {
       console.error(err);
@@ -86,6 +92,38 @@ export default function Settings() {
               <input type="email" required
                 value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
                 className="input-field pl-10" placeholder="email@contoh.com" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--t-secondary)' }}>
+              Tanggal Lahir
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Calendar className="w-5 h-5" style={{ color: 'var(--t-muted)' }} />
+              </div>
+              <input type="date" required
+                value={formData.birth_date} onChange={e => setFormData({...formData, birth_date: e.target.value})}
+                className="input-field pl-10 cursor-pointer" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--t-secondary)' }}>
+              Jenis Kelamin
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Users className="w-5 h-5" style={{ color: 'var(--t-muted)' }} />
+              </div>
+              <select required
+                value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})}
+                className="input-field pl-10 cursor-pointer">
+                <option value="">-- Pilih Jenis Kelamin --</option>
+                <option value="Laki-laki">Laki-laki</option>
+                <option value="Perempuan">Perempuan</option>
+              </select>
             </div>
           </div>
 

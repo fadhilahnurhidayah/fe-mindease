@@ -7,6 +7,8 @@ export default function AuthModal() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+  const [gender, setGender] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -19,7 +21,9 @@ export default function AuthModal() {
     setIsLoading(true); setError('');
     try {
       const endpoint = isRegistering ? '/auth/register' : '/auth/login';
-      const payload  = isRegistering ? { username, email, password } : { username, password };
+      const payload  = isRegistering 
+        ? { username, email, password, birth_date: birthDate, gender } 
+        : { username, password };
       const res  = await fetch(`${API_URL}${endpoint}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Terjadi kesalahan');
@@ -28,7 +32,7 @@ export default function AuthModal() {
         const ld = await lr.json();
         if (lr.ok) { login(ld.token); closeAuthModal(); }
       } else { login(data.token); closeAuthModal(); }
-      setUsername(''); setEmail(''); setPassword(''); setShowPassword(false);
+      setUsername(''); setEmail(''); setPassword(''); setBirthDate(''); setGender(''); setShowPassword(false);
     } catch (err) { setError(err.message); }
     finally { setIsLoading(false); }
   };
@@ -82,6 +86,23 @@ export default function AuthModal() {
                 <input type={f.type} value={f.val} onChange={e=>f.set(e.target.value)} className="input-field" placeholder={f.ph} required/>
               </div>
             ))}
+
+            {isRegistering && (
+              <>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color:'var(--t-muted)' }}>Tanggal Lahir</label>
+                  <input type="date" value={birthDate} onChange={e=>setBirthDate(e.target.value)} className="input-field cursor-pointer text-xs" required/>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color:'var(--t-muted)' }}>Jenis Kelamin</label>
+                  <select value={gender} onChange={e=>setGender(e.target.value)} className="input-field cursor-pointer text-xs" required>
+                    <option value="">-- Pilih Jenis Kelamin --</option>
+                    <option value="Laki-laki">Laki-laki</option>
+                    <option value="Perempuan">Perempuan</option>
+                  </select>
+                </div>
+              </>
+            )}
 
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color:'var(--t-muted)' }}>Password</label>
