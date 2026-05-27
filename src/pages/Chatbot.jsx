@@ -49,7 +49,9 @@ export default function Chatbot() {
       
       setMessages(prev => [...prev, {
         id: Date.now()+1, sender: 'ai',
-        text: data.reply || "Maaf, saya gagal memproses pesanmu."
+        text: data.reply || "Maaf, saya gagal memproses pesanmu.",
+        isCrisis: data.is_crisis,
+        hotlines: data.hotlines || []
       }]);
 
       if (data.extractedFeatures && Object.keys(data.extractedFeatures).length > 0) {
@@ -193,19 +195,43 @@ export default function Chatbot() {
                   ? <User className="w-4 h-4" style={{ color:'var(--t-secondary)' }} />
                   : <Bot className="w-4 h-4 text-white" />}
               </div>
-              <div className="p-4 rounded-2xl text-sm leading-relaxed"
-                   style={msg.sender==='user' ? {
-                     background:'linear-gradient(135deg,#16a0a0,#0e6363)',
-                     color:'#fff', borderRadius:'1rem 0.25rem 1rem 1rem',
-                     boxShadow:'0 4px 20px rgba(22,160,160,0.25)',
-                   } : {
-                     background:'var(--bg-surface)',
-                     border:'1px solid var(--border)',
-                     color:'var(--t-primary)',
-                     borderRadius:'0.25rem 1rem 1rem 1rem',
-                     boxShadow:'0 4px 16px rgba(0,0,0,0.1)',
-                   }}>
-                {msg.text}
+              
+              {/* Pesan Biasa atau Krisis */}
+              <div className="flex flex-col gap-2 max-w-full">
+                <div className="p-4 rounded-2xl text-sm leading-relaxed"
+                     style={msg.sender==='user' ? {
+                       background:'linear-gradient(135deg,#16a0a0,#0e6363)',
+                       color:'#fff', borderRadius:'1rem 0.25rem 1rem 1rem',
+                       boxShadow:'0 4px 20px rgba(22,160,160,0.25)',
+                     } : {
+                       background: 'var(--bg-surface)',
+                       border: '1px solid var(--border)',
+                       color: 'var(--t-primary)',
+                       borderRadius:'0.25rem 1rem 1rem 1rem',
+                       boxShadow:'0 4px 16px rgba(0,0,0,0.1)',
+                     }}>
+                  {msg.text}
+                </div>
+                
+                {/* Kartu Hotline Darurat (Khusus Krisis) */}
+                {msg.isCrisis && msg.hotlines && msg.hotlines.length > 0 && (
+                  <div className="flex flex-col gap-2 mt-1 animate-slide-up w-full">
+                    {msg.hotlines.map((h, i) => (
+                      <a key={i} href={`tel:${h.number}`} 
+                         className="flex items-center justify-between p-3 rounded-xl hover:opacity-80 transition-opacity cursor-pointer"
+                         style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}>
+                        <div>
+                          <p className="font-bold text-sm" style={{ color: 'var(--t-primary)' }}>{h.name}</p>
+                          <p className="text-xs" style={{ color: 'var(--t-secondary)' }}>{h.hours} {h.ext ? `• ${h.ext}` : ''}</p>
+                        </div>
+                        <div className="px-3 py-1.5 rounded-lg font-semibold text-sm flex items-center gap-2"
+                             style={{ background: 'rgba(22,160,160,0.1)', color: 'var(--t-brand)' }}>
+                          📞 {h.display || h.number}
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             )}
