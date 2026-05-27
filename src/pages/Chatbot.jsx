@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
+import { Send, Bot, User, Loader2, Sparkles, Plus, Trash2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const SUGGESTIONS = [
   'Saya merasa stres akhir-akhir ini',
@@ -8,12 +9,161 @@ const SUGGESTIONS = [
 ];
 
 export default function Chatbot() {
+  const { token } = useAuth();
   const [messages, setMessages] = useState([
     { id: 1, sender: 'ai', text: 'Halo! Saya AI MindEase. Ada yang ingin kamu ceritakan hari ini? Jangan ragu untuk berbagi.' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef(null);
+
+  // State untuk Sesi Obrolan
+  const [sessions, setSessions] = useState([]);
+  const [currentSessionId, setCurrentSessionId] = useState(null);
+
+  // 1. Memuat daftar sesi saat halaman dimuat atau token berubah
+  useEffect(() => {
+    if (token) {
+      setIsLoading(true);
+      fetch('http://localhost:5000/api/chat/sessions', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Gagal memuat sesi obrolan');
+        return res.json();
+      })
+      .then(data => {
+        setSessions(data);
+        if (data && data.length > 0) {
+          // Pilih sesi pertama (paling baru) secara default
+          setCurrentSessionId(data[0].id);
+        }
+      })
+      .catch(err => console.error("Gagal mengambil daftar sesi:", err))
+      .finally(() => setIsLoading(false));
+    } else {
+      // Reset ke default jika logout/tamu
+      setSessions([]);
+      setCurrentSessionId(null);
+      setMessages([
+        { id: 1, sender: 'ai', text: 'Halo! Saya AI MindEase. Ada yang ingin kamu ceritakan hari ini? Jangan ragu untuk berbagi.' }
+      ]);
+    }
+  }, [token]);
+
+  // 2. Memuat riwayat chat khusus untuk sesi yang aktif
+  useEffect(() => {
+    if (token && currentSessionId) {
+      setIsLoading(true);
+      fetch(`http://localhost:5000/api/chat/history?session_id=${currentSessionId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Gagal memuat riwayat sesi');
+        return res.json();
+      })
+      .then(history => {
+        if (history) {
+          setMessages(history);
+        }
+      })
+      .catch(err => console.error("Gagal mengambil riwayat chat sesi:", err))
+      .finally(() => setIsLoading(false));
+    }
+  }, [token, currentSessionId]);
+
+  // Handler beralih sesi
+  const handleSwitchSession = (sessionId) => {
+    setCurrentSessionId(sessionId);
+    // Reset state fitur agar fresh untuk percakapan di sesi ini
+    setCurrentState({
+      age: null, gender: null, academic_year: null, study_hours_per_day: null,
+      exam_pressure: null, academic_performance: null, stress_level: null,
+      anxiety_score: null, depression_score: null, sleep_hours: null,
+      physical_activity: null, social_support: null, screen_time: null,
+      internet_usage: null, financial_stress: null, family_expectation: null,
+      sleep_category: null, screen_time_category: null, stress_category: null,
+      mental_risk_score: null, support_category: null
+    });
+  };
+
+  // Handler membuat sesi baru
+  const handleCreateSession = async () => {
+    if (!token) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/chat/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!res.ok) throw new Error('Gagal membuat sesi baru');
+      const newSession = await res.json();
+      
+      // Tambahkan sesi baru ke awal daftar
+      setSessions(prev => [newSession, ...prev]);
+      setCurrentSessionId(newSession.id);
+      
+      // Reset state fitur
+      setCurrentState({
+        age: null, gender: null, academic_year: null, study_hours_per_day: null,
+        exam_pressure: null, academic_performance: null, stress_level: null,
+        anxiety_score: null, depression_score: null, sleep_hours: null,
+        physical_activity: null, social_support: null, screen_time: null,
+        internet_usage: null, financial_stress: null, family_expectation: null,
+        sleep_category: null, screen_time_category: null, stress_category: null,
+        mental_risk_score: null, support_category: null
+      });
+    } catch (err) {
+      console.error(err);
+      alert('Gagal membuat sesi obrolan baru.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handler menghapus sesi
+  const handleDeleteSession = async (sessionId) => {
+    if (!token || !sessionId) return;
+    if (!window.confirm('Apakah kamu yakin ingin menghapus sesi obrolan ini secara permanen?')) return;
+    
+    setIsLoading(true);
+    try {
+      const res = await fetch(`http://localhost:5000/api/chat/sessions/${sessionId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!res.ok) throw new Error('Gagal menghapus sesi');
+      
+      const updatedSessions = sessions.filter(s => s.id !== sessionId);
+      setSessions(updatedSessions);
+      
+      if (updatedSessions.length > 0) {
+        setCurrentSessionId(updatedSessions[0].id);
+      } else {
+        // Jika semua sesi habis, ambil ulang untuk memicu auto-generate sesi baru oleh backend
+        fetch('http://localhost:5000/api/chat/sessions', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(r => r.json())
+        .then(data => {
+          setSessions(data);
+          if (data && data.length > 0) {
+            setCurrentSessionId(data[0].id);
+          }
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Gagal menghapus sesi obrolan.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // State untuk menyimpan 21 fitur secara diam-diam
   const [currentState, setCurrentState] = useState({
@@ -40,10 +190,15 @@ export default function Chatbot() {
     setIsLoading(true);
 
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch('http://localhost:5000/api/chat/agent', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, currentState })
+        headers: headers,
+        body: JSON.stringify({ message: text, currentState, session_id: currentSessionId })
       });
       const data = await res.json();
       
@@ -101,6 +256,37 @@ export default function Chatbot() {
         burnoutScore: prediction.burnout_score,
         recommendation: prediction.genai_recommendation
       }]);
+
+      // Kirim hasil analisis ke backend untuk disimpan di database jika login
+      if (token) {
+        fetch('http://localhost:5000/api/chat/save-result', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            riskLevel: prediction.risk_level,
+            burnoutScore: prediction.burnout_score,
+            recommendation: prediction.genai_recommendation,
+            session_id: currentSessionId
+          })
+        })
+        .then(res => {
+          if (!res.ok) throw new Error('Gagal menyimpan hasil prediksi');
+          return res.json();
+        })
+        .then(() => {
+          // Segarkan daftar sesi dari backend untuk meng-update hasil diagnosa di dropdown
+          fetch('http://localhost:5000/api/chat/sessions', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+          .then(res => res.json())
+          .then(data => setSessions(data))
+          .catch(err => console.error("Gagal memperbarui daftar sesi setelah diagnosis:", err));
+        })
+        .catch(err => console.error("Gagal menyimpan hasil prediksi ke DB:", err));
+      }
     })
     .catch(err => {
       console.error("Gagal prediksi:", err);
@@ -116,27 +302,94 @@ export default function Chatbot() {
     <div className="max-w-3xl mx-auto h-full flex flex-col animate-fade-in pb-4">
 
       {/* Header */}
-      <div className="glass-card p-4 flex items-center gap-3"
+      <div className="glass-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
            style={{ borderBottomLeftRadius:0, borderBottomRightRadius:0, borderBottom:'none' }}>
-        <div className="relative">
-          <div className="absolute inset-0 rounded-full blur-sm opacity-70"
-               style={{ background:'linear-gradient(135deg,#16a0a0,#0e6363)' }} />
-          <div className="relative w-10 h-10 rounded-full flex items-center justify-center"
-               style={{ background:'linear-gradient(135deg,#16a0a0,#0e6363)', boxShadow:'0 4px 16px rgba(22,160,160,0.4)' }}>
-            <Bot className="w-5 h-5 text-white" />
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-full blur-sm opacity-70"
+                 style={{ background:'linear-gradient(135deg,#16a0a0,#0e6363)' }} />
+            <div className="relative w-10 h-10 rounded-full flex items-center justify-center"
+                 style={{ background:'linear-gradient(135deg,#16a0a0,#0e6363)', boxShadow:'0 4px 16px rgba(22,160,160,0.4)' }}>
+              <Bot className="w-5 h-5 text-white" />
+            </div>
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2"
+                 style={{ borderColor:'var(--bg-base)' }} />
           </div>
-          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2"
-               style={{ borderColor:'var(--bg-base)' }} />
+          <div>
+            <h2 className="font-bold text-sm" style={{ color:'var(--t-primary)' }}>MindEase AI Companion</h2>
+            <p className="text-xs text-emerald-500 flex items-center gap-1">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              Online — Selalu ada untukmu
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 className="font-bold text-sm" style={{ color:'var(--t-primary)' }}>MindEase AI Companion</h2>
-          <p className="text-xs text-emerald-500 flex items-center gap-1">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            Online — Selalu ada untukmu
-          </p>
-        </div>
-        <div className="ml-auto"><Sparkles className="w-5 h-5 text-brand-400 opacity-60" /></div>
+
+        {/* Dropdown Manajemen Sesi Obrolan */}
+        {token ? (
+          <div className="flex items-center gap-2 ml-auto sm:ml-0 shrink-0 w-full sm:w-auto justify-end">
+            <select
+              value={currentSessionId || ''}
+              onChange={(e) => handleSwitchSession(parseInt(e.target.value))}
+              className="bg-transparent border border-[var(--border)] rounded-lg px-2.5 py-1.5 text-xs font-semibold cursor-pointer max-w-[180px] sm:max-w-[240px] truncate"
+              style={{
+                color: 'var(--t-primary)',
+                background: 'var(--bg-surface)',
+                outline: 'none',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+              }}
+            >
+              {sessions.map((s) => {
+                let suffix = '';
+                if (s.risk_level) {
+                  const riskEmoji = s.risk_level === 'High' ? '🔴' : s.risk_level === 'Medium' ? '🟡' : '🟢';
+                  suffix = ` (${riskEmoji} ${s.burnout_score}/10)`;
+                } else {
+                  suffix = ' (Belum Dianalisis)';
+                }
+                return (
+                  <option key={s.id} value={s.id} style={{ background: 'var(--bg-surface)', color: 'var(--t-primary)' }}>
+                    {s.title}{suffix}
+                  </option>
+                );
+              })}
+            </select>
+            
+            <button
+              onClick={handleCreateSession}
+              title="Sesi Baru"
+              className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 border border-[var(--border)] hover:bg-[rgba(22,160,160,0.1)] active:scale-95"
+              style={{
+                background: 'var(--bg-surface)',
+                color: 'var(--t-brand)',
+              }}
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={() => handleDeleteSession(currentSessionId)}
+              title="Hapus Sesi Ini"
+              className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 border border-[rgba(239,68,68,0.2)] hover:bg-[rgba(239,68,68,0.1)] hover:text-red-500 active:scale-95"
+              style={{
+                background: 'var(--bg-surface)',
+                color: 'var(--t-secondary)',
+              }}
+            >
+              <Trash2 className="w-4 h-4 text-red-400" />
+            </button>
+          </div>
+        ) : (
+          <div className="ml-auto"><Sparkles className="w-5 h-5 text-brand-400 opacity-60" /></div>
+        )}
       </div>
+
+      {/* Guest Mode Banner */}
+      {!token && (
+        <div className="px-4 py-2 text-center text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+             style={{ background: 'rgba(245,158,11,0.08)', borderBottom: '1px solid rgba(245,158,11,0.18)', color: '#d97706' }}>
+          ⚠️ Mode Tamu — Login untuk menyimpan riwayat obrolan AI Anda secara persisten.
+        </div>
+      )}
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4"
