@@ -20,8 +20,7 @@ export default function Komunitas() {
   const [channels, setChannels] = useState([
     { slug: 'curhat-umum', name: '💬-curhat-umum', description: 'Saluran bebas untuk membagikan keluh kesah dan cerita apa saja.' },
     { slug: 'stres-kecemasan', name: '🧠-stres-kecemasan', description: 'Tempat berbagi cerita seputar stres, kepanikan, dan kecemasan Anda.' },
-    { slug: 'insomnia-tidur', name: '🌙-insomnia-tidur', description: 'Mengalami masalah tidur? Yuk, saling bercerita dan berbagi tips di sini.' },
-    { slug: 'pelukan-hangat', name: '🫂-pelukan-hangat', description: 'Bila sedang sedih atau terluka, dapatkan pelukan hangat dan simpati di sini.' }
+    { slug: 'insomnia-tidur', name: '🌙-insomnia-tidur', description: 'Mengalami masalah tidur? Yuk, saling bercerita dan berbagi tips di sini.' }
   ]);
   const [activeChannel, setActiveChannel] = useState('curhat-umum');
 
@@ -44,7 +43,7 @@ export default function Komunitas() {
       const res = await fetch(`${API_URL}/posts/channels`);
       if (res.ok) {
         const data = await res.json();
-        if (data.length > 0) setChannels(data);
+        setChannels(data);
       }
     } catch (err) {
       console.error(err);
@@ -56,7 +55,6 @@ export default function Komunitas() {
     fetchChannels();
   }, []);
 
-  // Scroll to bottom when channel changes or new posts load
   useEffect(() => {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -82,7 +80,7 @@ export default function Komunitas() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ content: finalContent }),
+        body: JSON.stringify({ content: finalContent, channel_slug: activeChannel }),
       });
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) { 

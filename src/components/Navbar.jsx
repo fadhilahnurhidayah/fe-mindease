@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { HeartPulse, LayoutDashboard, Users, MessageCircle, CalendarHeart, LogOut, LogIn, UserPlus, Sun, Moon, Menu, X } from 'lucide-react';
+import { HeartPulse, LayoutDashboard, Users, MessageCircle, LogOut, LogIn, UserPlus, Sun, Moon, Menu, X, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -14,8 +14,11 @@ export default function Navbar() {
     { name: 'Dashboard',      path: '/',           icon: <LayoutDashboard className="w-4 h-4" /> },
     { name: 'Safe Space',     path: '/komunitas',  icon: <Users className="w-4 h-4" /> },
     { name: 'AI Chat',        path: '/chat',       icon: <MessageCircle className="w-4 h-4" /> },
-    { name: 'Telekonsultasi', path: '/konsultasi', icon: <CalendarHeart className="w-4 h-4" /> },
   ];
+
+  if (token) {
+    navLinks.push({ name: 'Settings', path: '/settings', icon: <Settings className="w-4 h-4" /> });
+  }
 
   if (user && user.role === 'admin') {
     navLinks.push({ name: 'Admin', path: '/admin', icon: <Users className="w-4 h-4 text-rose-400" /> });

@@ -187,6 +187,7 @@ export default function AdminDashboard() {
         if (res.ok) {
           setShowUserModal(false);
           fetchData();
+          alert('Role pengguna berhasil diperbarui!');
         } else {
           const err = await res.json();
           alert(`Gagal edit role: ${err.error}`);
@@ -201,6 +202,7 @@ export default function AdminDashboard() {
         if (res.ok) {
           setShowUserModal(false);
           fetchData();
+          alert('Pengguna baru berhasil ditambahkan!');
         } else {
           const err = await res.json();
           alert(`Gagal tambah user: ${err.error}`);
@@ -266,7 +268,7 @@ export default function AdminDashboard() {
           { label: 'Total Pengguna',   value: stats.users,       icon: <Users className="w-6 h-6 text-emerald-500" />,  bg: 'bg-emerald-500/10' },
           { label: 'Total Postingan',  value: stats.posts,       icon: <MessageSquare className="w-6 h-6 text-blue-500" />, bg: 'bg-blue-500/10' },
           { label: 'Data Mood Masuk',  value: analytics?.moodDistribution?.reduce((a,r) => a + parseInt(r.count), 0) ?? '—', icon: <Activity className="w-6 h-6 text-amber-500" />, bg: 'bg-amber-500/10' },
-          { label: 'Daftar Hari Ini',  value: analytics?.userGrowth?.find(r => r.date === formatDate(new Date().toISOString().slice(0,10)))?.Pengguna ?? 0, icon: <UserPlus className="w-6 h-6 text-rose-500" />, bg: 'bg-rose-500/10' },
+          { label: 'Daftar Hari Ini',  value: userChart?.find(r => r.date === formatDate(new Date().toLocaleDateString('en-CA')))?.Pengguna ?? 0, icon: <UserPlus className="w-6 h-6 text-rose-500" />, bg: 'bg-rose-500/10' },
         ].map((s, i) => (
           <div key={i} className="glass-card p-5 flex items-center gap-4">
             <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${s.bg}`}>{s.icon}</div>

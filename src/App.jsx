@@ -2,7 +2,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import Chatbot from './pages/Chatbot';
-import Telekonsultasi from './pages/Telekonsultasi';
+import Settings from './pages/Settings';
+import ResetPassword from './pages/ResetPassword';
 import Komunitas from './pages/Komunitas';
 import AdminDashboard from './pages/AdminDashboard';
 import { AuthProvider } from './context/AuthContext';
@@ -40,7 +41,8 @@ function App() {
                   <Route path="/"           element={<Dashboard />} />
                   <Route path="/komunitas"  element={<Komunitas />} />
                   <Route path="/chat"       element={<Chatbot />} />
-                  <Route path="/konsultasi" element={<Telekonsultasi />} />
+                  <Route path="/settings"   element={<Settings />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/admin"      element={<AdminDashboard />} />
                 </Routes>
               </div>

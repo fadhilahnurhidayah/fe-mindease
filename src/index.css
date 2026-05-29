@@ -162,6 +162,14 @@
     border-color: var(--border-act);
     box-shadow:0 0 0 3px rgba(22,160,160,.15);
   }
+  .input-field option {
+    background: #0c1c26;
+    color: #e2eaf0;
+  }
+  [data-theme="light"] .input-field option {
+    background: #ffffff;
+    color: #0f2830;
+  }
 
   .gradient-text {
     background:linear-gradient(135deg,#5dcfcf 0%,#16a0a0 50%,#99e5e5 100%);

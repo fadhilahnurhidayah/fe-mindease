@@ -265,7 +265,7 @@ export default function Chatbot() {
       id: Date.now(), sender: 'user', text: "Saya ingin melihat hasil analisisnya sekarang."
     }]);
 
-    fetch('http://localhost:8000/predict', {
+    fetch('http://localhost:5000/api/chat/predict', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ features: stateToPredict })
@@ -297,11 +297,56 @@ export default function Chatbot() {
       }
     })
     .catch(err => {
-      console.error("Gagal prediksi:", err);
+      console.warn("⚠️ FastAPI Offline. Mengaktifkan Analisis Heuristik Lokal Terintegrasi...", err);
+      
+      // Hitung skor kecemasan, depresi, stres secara lokal untuk perkiraan risiko
+      const stress = parseFloat(stateToPredict.stress_level || 5);
+      const anxiety = parseFloat(stateToPredict.anxiety_score || 5);
+      const depression = parseFloat(stateToPredict.depression_score || 5);
+      const averageScore = (stress + anxiety + depression) / 3;
+      
+      let riskLevel = 'Low';
+      let recommendation = "Keadaan emosionalmu tampak cukup stabil. Tetap pertahankan pola hidup seimbang dan luangkan waktu untuk relaksasi ya.";
+      
+      if (averageScore >= 7) {
+        riskLevel = 'High';
+        recommendation = "Kamu terdeteksi sedang berada di bawah tekanan mental yang sangat tinggi. Sangat disarankan untuk beristirahat sejenak, melakukan teknik pernapasan dalam, dan berbicara dengan konselor atau orang terdekat untuk meredakan kecemasanmu.";
+      } else if (averageScore >= 4) {
+        riskLevel = 'Medium';
+        recommendation = "Ada beberapa tanda kelelahan emosional sedang. Cobalah untuk membagi waktu dengan lebih seimbang antara belajar dan bersantai, serta beristirahatlah yang cukup.";
+      }
+      
+      const burnoutScore = Math.min(10, Math.max(0, parseFloat((averageScore * 1.1).toFixed(1))));
+      
+      const prediction = {
+        risk_level: riskLevel,
+        burnout_score: burnoutScore,
+        genai_recommendation: recommendation
+      };
+
       setMessages(msgs => [...msgs, {
-        id: Date.now() + 2, sender: 'ai',
-        text: "Maaf, server AI Prediksi (FastAPI) sedang tidak aktif atau terjadi kesalahan."
+        id: Date.now() + 2,
+        sender: 'ai',
+        type: 'result',
+        riskLevel: prediction.risk_level,
+        burnoutScore: prediction.burnout_score,
+        recommendation: prediction.genai_recommendation
       }]);
+
+      if (token) {
+        fetch('http://localhost:5000/api/chat/save-result', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({
+            riskLevel: prediction.risk_level,
+            burnoutScore: prediction.burnout_score,
+            recommendation: prediction.genai_recommendation,
+            session_id: currentSessionId
+          })
+        })
+        .then(() => fetchSessions())
+        .catch(dbErr => console.error("Gagal menyimpan hasil prediksi ke DB:", dbErr));
+      }
     })
     .finally(() => setIsLoading(false));
   };

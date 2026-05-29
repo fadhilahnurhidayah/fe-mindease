@@ -4,7 +4,7 @@ import { Settings as SettingsIcon, User, Mail, Lock, Loader2, Save, Calendar, Us
 import { Navigate } from 'react-router-dom';
 
 export default function Settings() {
-  const { token, user, logout } = useAuth();
+  const { token, user, logout, login } = useAuth();
   const [formData, setFormData] = useState({ username: '', email: '', password: '', birth_date: '', gender: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -43,8 +43,16 @@ export default function Settings() {
         body: JSON.stringify(formData)
       });
       if (res.ok) {
-        setMessage('Profil berhasil diperbarui. Silakan login kembali dalam 2 detik...');
-        setTimeout(() => logout(), 2000);
+        const data = await res.json();
+        if (formData.password) {
+          setMessage('Profil berhasil diperbarui. Silakan login kembali dalam 2 detik...');
+          setTimeout(() => logout(), 2000);
+        } else {
+          login(data.token);
+          setMessage('Profil berhasil diperbarui!');
+          // Clear password input field in state
+          setFormData(prev => ({ ...prev, password: '' }));
+        }
       } else {
         const err = await res.json();
         setMessage(`Gagal: ${err.error}`);
