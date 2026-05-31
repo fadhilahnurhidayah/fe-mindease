@@ -47,7 +47,6 @@ export default function AdminDashboard() {
   const [channelForm, setChannelForm] = useState({ name: '', slug: '', description: '' });
   const [searchQuery, setSearchQuery] = useState('');
   const [searchDate, setSearchDate] = useState('');
-  const API_URL = 'https://be-mindease.onrender.com/api';
 
   useEffect(() => {
     if (user && user.role === 'admin') fetchData();

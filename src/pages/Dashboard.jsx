@@ -18,7 +18,6 @@ export default function Dashboard() {
   const [particles, setParticles] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const { token, user } = useAuth();
-  const API_URL = 'https://be-mindease.onrender.com/api';
 
   const resetBubbles = () => {
     const bubbleColors = [

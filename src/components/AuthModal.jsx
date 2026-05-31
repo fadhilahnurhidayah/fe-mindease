@@ -14,7 +14,6 @@ export default function AuthModal() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const API_URL = 'https://be-mindease.onrender.com/api';
 
   if (!showAuthModal) return null;
 

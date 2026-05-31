@@ -16,7 +16,6 @@ export default function Komunitas() {
   const [newPostContent, setNewPostContent] = useState('');
   const [isPosting, setIsPosting] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null);
-  const API_URL = 'https://be-mindease.onrender.com/api';
   const chatEndRef = useRef(null);
 
   const [channels, setChannels] = useState([
