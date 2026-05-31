@@ -1,5 +1,6 @@
+import { API_URL } from '../config';
 import { useState, useEffect, useRef } from 'react';
-import {
+import { 
   AlertCircle, Info, Plus, X, Send, Loader2, Shield,
   Mic, Headphones, Hash, Compass, Users, CornerUpLeft
 } from 'lucide-react';
@@ -31,11 +32,11 @@ export default function Komunitas() {
       if (!res.ok) throw new Error('Gagal memuat data komunitas');
       setPosts(await res.json());
       setShowError(false);
-    } catch (err) {
-      setErrorMessage(err.message);
-      setShowError(true);
-    } finally {
-      setIsLoading(false);
+    } catch (err) { 
+      setErrorMessage(err.message); 
+      setShowError(true); 
+    } finally { 
+      setIsLoading(false); 
     }
   };
 
@@ -51,8 +52,8 @@ export default function Komunitas() {
     }
   };
 
-  useEffect(() => {
-    fetchPosts();
+  useEffect(() => { 
+    fetchPosts(); 
     fetchChannels();
   }, []);
 
@@ -66,7 +67,7 @@ export default function Komunitas() {
     e.preventDefault();
     if (!newPostContent.trim()) return;
     setIsPosting(true);
-
+    
     // Format message if it's a reply
     let finalContent = newPostContent;
     if (replyingTo) {
@@ -84,21 +85,21 @@ export default function Komunitas() {
         body: JSON.stringify({ content: finalContent, channel_slug: activeChannel }),
       });
       if (!res.ok) {
-        if (res.status === 401 || res.status === 403) {
-          logout();
-          throw new Error('Sesi berakhir. Silakan login kembali.');
+        if (res.status === 401 || res.status === 403) { 
+          logout(); 
+          throw new Error('Sesi berakhir. Silakan login kembali.'); 
         }
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error || 'Gagal mengirim postingan');
       }
-      setNewPostContent('');
+      setNewPostContent(''); 
       setReplyingTo(null); // Clear reply state
       fetchPosts();
-    } catch (err) {
-      setErrorMessage(err.message);
-      setShowError(true);
-    } finally {
-      setIsPosting(false);
+    } catch (err) { 
+      setErrorMessage(err.message); 
+      setShowError(true); 
+    } finally { 
+      setIsPosting(false); 
     }
   };
 
@@ -144,10 +145,10 @@ export default function Komunitas() {
   const getFilteredPosts = () => {
     return posts.filter(p => {
       const postSlug = p.channel_slug || 'curhat-umum';
-
+      
       // If it matches by exact channel_slug, include it!
       if (postSlug === activeChannel) return true;
-
+      
       // For legacy posts, run fallback keyword filtering if in seeded channels
       if (!p.channel_slug) {
         const c = p.content.toLowerCase();
@@ -161,7 +162,7 @@ export default function Komunitas() {
           return c.includes('sedih') || c.includes('kecewa') || c.includes('nangis') || c.includes('peluk') || c.includes('luka') || c.includes('sakit') || c.includes('depresi') || c.includes('hancur');
         }
       }
-
+      
       return false;
     });
   };
@@ -169,7 +170,7 @@ export default function Komunitas() {
   const filteredPosts = getFilteredPosts().slice().reverse();
   const currentChannel = channels.find(c => c.slug === activeChannel) || channels[0];
 
-  const uniquePosters = posts.length > 0
+  const uniquePosters = posts.length > 0 
     ? [...new Set(posts.map(p => p.username))].filter(u => u !== (user ? user.username.substring(0, 3) + '***' : ''))
     : [];
 
@@ -185,7 +186,7 @@ export default function Komunitas() {
         <div>
           <div className="flex items-center gap-3 mb-1">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center animate-pulse"
-              style={{ background: 'rgba(22,160,160,0.15)', boxShadow: '0 0 0 1px rgba(22,160,160,0.2)' }}>
+                 style={{ background: 'rgba(22,160,160,0.15)', boxShadow: '0 0 0 1px rgba(22,160,160,0.2)' }}>
               <Shield className="w-5 h-5 text-brand-400" />
             </div>
             <h1 className="text-3xl font-extrabold tracking-tight gradient-text">Ruang Aman</h1>
@@ -221,12 +222,12 @@ export default function Komunitas() {
 
       {/* Main Discord App Layout Container */}
       <div className="flex flex-1 w-full rounded-3xl overflow-hidden border border-[var(--border)] glass-card relative min-h-0"
-        style={{ boxShadow: '0 20px 40px rgba(0,0,0,0.25)' }}>
-
+           style={{ boxShadow: '0 20px 40px rgba(0,0,0,0.25)' }}>
+        
         {/* Panel 2: Channels Sidebar (Middle-left) - Medium screens up */}
         <div className="w-64 shrink-0 hidden md:flex flex-col h-full"
-          style={{ background: 'rgba(0,0,0,0.06)', borderRight: '1px solid var(--border)' }}>
-
+             style={{ background: 'rgba(0,0,0,0.06)', borderRight: '1px solid var(--border)' }}>
+          
           {/* Server Title Header */}
           <div className="h-14 flex items-center justify-between px-4 border-b border-[var(--border)]">
             <span className="font-extrabold text-sm tracking-wide text-[var(--t-primary)]">🧠 Safe Space Server</span>
@@ -260,18 +261,18 @@ export default function Komunitas() {
 
           {/* Discord Bottom-left User Profile Bar */}
           <div className="h-[60px] flex items-center px-3 gap-2.5 border-t border-[var(--border)]"
-            style={{ background: 'var(--bg-surface)', boxShadow: '0 -2px 10px rgba(0,0,0,0.02)' }}>
-
+               style={{ background: 'var(--bg-surface)', boxShadow: '0 -2px 10px rgba(0,0,0,0.02)' }}>
+            
             {/* User Avatar */}
             <div className="relative shrink-0">
               <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-md select-none"
-                style={{
-                  background: token && user ? uColor(user.username) : 'var(--bg-subtle)'
-                }}>
+                   style={{ 
+                     background: token && user ? uColor(user.username) : 'var(--bg-subtle)'
+                   }}>
                 {token && user ? uInit(user.username) : '?'}
               </div>
               <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[var(--bg-surface)]"
-                style={{ background: token ? '#10b981' : '#6b7280' }} />
+                   style={{ background: token ? '#10b981' : '#6b7280' }} />
             </div>
 
             {/* User Name Info */}
@@ -288,7 +289,7 @@ export default function Komunitas() {
 
         {/* Panel 3: Central Chat Screen */}
         <div className="flex-1 flex flex-col h-full bg-transparent">
-
+          
           {/* Chat Header bar */}
           <div className="h-14 flex items-center justify-between px-4 border-b border-[var(--border)] shrink-0">
             <div className="flex items-center gap-2 min-w-0">
@@ -301,11 +302,11 @@ export default function Komunitas() {
                 {currentChannel.desc}
               </span>
             </div>
-
+            
             <div className="flex items-center gap-3">
               {/* Online members indicator for mobile */}
               <div className="md:hidden flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
-                style={{ background: 'rgba(22,160,160,0.12)', color: 'var(--t-brand)' }}>
+                   style={{ background: 'rgba(22,160,160,0.12)', color: 'var(--t-brand)' }}>
                 <Users className="w-3 h-3" />
                 <span>{activeMembers.length}</span>
               </div>
@@ -315,7 +316,7 @@ export default function Komunitas() {
           {/* Error Banner inside Chat area */}
           {showError && (
             <div className="mx-4 mt-3 flex items-center justify-between p-3.5 rounded-xl animate-slide-down animate-pulse-once"
-              style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}>
+                 style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}>
               <div className="flex items-center gap-2.5 text-xs font-semibold">
                 <AlertCircle className="w-4.5 h-4.5 shrink-0" />
                 <span>{errorMessage}</span>
@@ -337,14 +338,14 @@ export default function Komunitas() {
               /* Satisfying Discord Empty Channel Greeting */
               <div className="flex flex-col items-start justify-center p-8 text-left max-w-xl animate-slide-up mt-8">
                 <div className="w-14 h-14 rounded-full flex items-center justify-center text-3xl font-extrabold text-white mb-4 shadow-lg"
-                  style={{ background: 'linear-gradient(135deg, #16a0a0, #0e6363)' }}>
+                     style={{ background: 'linear-gradient(135deg, #16a0a0, #0e6363)' }}>
                   #
                 </div>
                 <h2 className="text-2xl font-extrabold text-[var(--t-primary)] mb-1">
                   Selamat datang di #{currentChannel.name.split('-').slice(1).join('-')}!
                 </h2>
                 <p className="text-xs text-[var(--t-muted)] font-medium leading-relaxed">
-                  Ini adalah awal dari riwayat obrolan di saluran #{currentChannel.name.split('-').slice(1).join('-')}.
+                  Ini adalah awal dari riwayat obrolan di saluran #{currentChannel.name.split('-').slice(1).join('-')}. 
                   Bagikan pikiran atau curahan hatimu dengan aman di sini tanpa rasa khawatir. 💚
                 </p>
               </div>
@@ -384,7 +385,7 @@ export default function Komunitas() {
                       )}
 
                       <div className="flex items-start gap-3.5 p-2 rounded-xl transition-all duration-150 hover:bg-[rgba(255,255,255,0.02)] relative">
-
+                        
                         {/* Hover reply action button */}
                         {token && (
                           <div className="absolute right-3 top-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex gap-1 z-10">
@@ -400,10 +401,10 @@ export default function Komunitas() {
 
                         {/* User Avatar left */}
                         <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-md select-none transition-transform group-hover:scale-105"
-                          style={{ background: uColor(post.username) }}>
+                             style={{ background: uColor(post.username) }}>
                           {uInit(post.username)}
                         </div>
-
+                        
                         {/* Message Body right */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-baseline gap-2.5 mb-1.5">
@@ -431,7 +432,7 @@ export default function Komunitas() {
           <div className="p-4 shrink-0 animate-fade-in" style={{ borderTop: '1px solid var(--border)' }}>
             {!token ? (
               <div className="flex flex-col sm:flex-row items-center justify-between p-3.5 rounded-2xl gap-3 text-xs"
-                style={{ background: 'rgba(245,158,11,0.06)', border: '1px dashed rgba(245,158,11,0.2)' }}>
+                   style={{ background: 'rgba(245,158,11,0.06)', border: '1px dashed rgba(245,158,11,0.2)' }}>
                 <div className="flex items-center gap-2 text-amber-500 font-bold">
                   <Info className="w-4 h-4 shrink-0" />
                   <span>Mode Baca saja — Silakan login untuk berkontribusi secara anonim.</span>
@@ -497,8 +498,8 @@ export default function Komunitas() {
 
         {/* Panel 4: Online Members Sidebar (Far Right) - Desktop view */}
         <div className="w-60 shrink-0 hidden lg:flex flex-col h-full"
-          style={{ background: 'rgba(0,0,0,0.1)', borderLeft: '1px solid var(--border)' }}>
-
+             style={{ background: 'rgba(0,0,0,0.1)', borderLeft: '1px solid var(--border)' }}>
+          
           <div className="h-14 flex items-center px-4 border-b border-[var(--border)] shrink-0">
             <span className="font-extrabold text-xs text-[var(--t-primary)] tracking-wide uppercase">Member Aktif — {activeMembers.length}</span>
           </div>
@@ -513,13 +514,13 @@ export default function Komunitas() {
                     {/* Status dot and avatar */}
                     <div className="relative">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-md select-none"
-                        style={{
-                          background: uColor(memb.username)
-                        }}>
+                           style={{ 
+                             background: uColor(memb.username)
+                           }}>
                         {uInit(memb.username)}
                       </div>
                       <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[var(--bg-surface)]"
-                        style={{ background: memb.status === 'online' ? '#10b981' : '#f59e0b' }} />
+                           style={{ background: memb.status === 'online' ? '#10b981' : '#f59e0b' }} />
                     </div>
 
                     <div className="min-w-0">

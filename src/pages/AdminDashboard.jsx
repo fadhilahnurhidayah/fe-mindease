@@ -1,3 +1,4 @@
+import { API_URL } from '../config';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -12,7 +13,7 @@ import {
 } from 'recharts';
 
 const MOOD_COLORS = { happy: '#10b981', neutral: '#f59e0b', sad: '#f43f5e' };
-const PIE_COLORS = ['#10b981', '#f59e0b', '#f43f5e'];
+const PIE_COLORS  = ['#10b981', '#f59e0b', '#f43f5e'];
 const MOOD_LABELS = { happy: 'Senang', neutral: 'Biasa', sad: 'Sedih/Lelah' };
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -32,9 +33,9 @@ const CustomTooltip = ({ active, payload, label }) => {
 export default function AdminDashboard() {
   const { token, user } = useAuth();
   const { theme } = useTheme();
-  const [stats, setStats] = useState({ users: 0, posts: 0 });
-  const [posts, setPosts] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [stats, setStats]       = useState({ users: 0, posts: 0 });
+  const [posts, setPosts]       = useState([]);
+  const [users, setUsers]       = useState([]);
   const [channels, setChannels] = useState([]);
   const [selectedPosts, setSelectedPosts] = useState([]);
   const [analytics, setAnalytics] = useState(null);
@@ -63,11 +64,11 @@ export default function AdminDashboard() {
         fetch(`${API_URL}/admin/analytics`, { headers }),
         fetch(`${API_URL}/posts/channels`),
       ]);
-      if (statsRes.ok) setStats(await statsRes.json());
-      if (postsRes.ok) setPosts(await postsRes.json());
-      if (usersRes.ok) setUsers(await usersRes.json());
+      if (statsRes.ok)     setStats(await statsRes.json());
+      if (postsRes.ok)     setPosts(await postsRes.json());
+      if (usersRes.ok)     setUsers(await usersRes.json());
       if (analyticsRes.ok) setAnalytics(await analyticsRes.json());
-      if (channelsRes.ok) setChannels(await channelsRes.json());
+      if (channelsRes.ok)  setChannels(await channelsRes.json());
     } catch (e) {
       console.error(e);
     } finally {
@@ -89,9 +90,9 @@ export default function AdminDashboard() {
     try {
       const res = await fetch(`${API_URL}/admin/posts/bulk-delete`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+        headers: { 
+          'Content-Type': 'application/json', 
+          Authorization: `Bearer ${token}` 
         },
         body: JSON.stringify({ ids: selectedPosts })
       });
@@ -102,17 +103,17 @@ export default function AdminDashboard() {
         const err = await res.json();
         alert(`Gagal: ${err.error}`);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (e) { 
+      console.error(e); 
     }
   };
 
   const handleSaveChannel = async (e) => {
     e.preventDefault();
     try {
-      const headers = {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
+      const headers = { 
+        'Content-Type': 'application/json', 
+        Authorization: `Bearer ${token}` 
       };
       if (editChannel) {
         // Edit Channel PUT
@@ -192,7 +193,7 @@ export default function AdminDashboard() {
 
   const filteredPosts = posts.filter(post => {
     // 1. Search Query matches content, username, or channel slug
-    const matchesSearch = searchQuery.trim() === '' ||
+    const matchesSearch = searchQuery.trim() === '' || 
       post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
       post.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (post.channel_slug || '').toLowerCase().includes(searchQuery.toLowerCase());
@@ -207,7 +208,7 @@ export default function AdminDashboard() {
   const handleSelectAllPosts = () => {
     const filteredIds = filteredPosts.map(p => p.id);
     const allFilteredSelected = filteredIds.every(id => selectedPosts.includes(id));
-
+    
     if (allFilteredSelected) {
       // Unselect all filtered ids
       setSelectedPosts(prev => prev.filter(id => !filteredIds.includes(id)));
@@ -293,9 +294,9 @@ export default function AdminDashboard() {
     return `${parts[2]}/${parts[1]}`;
   };
 
-  const moodTrend = (analytics?.moodTrend || []).map(r => ({ ...r, date: formatDate(r.date), happy: +r.happy, neutral: +r.neutral, sad: +r.sad }));
+  const moodTrend  = (analytics?.moodTrend  || []).map(r => ({ ...r, date: formatDate(r.date), happy: +r.happy, neutral: +r.neutral, sad: +r.sad }));
   const postsChart = (analytics?.postsPerDay || []).map(r => ({ date: formatDate(r.date), Postingan: +r.count }));
-  const userChart = (analytics?.userGrowth || []).map(r => ({ date: formatDate(r.date), Pengguna: +r.count }));
+  const userChart  = (analytics?.userGrowth  || []).map(r => ({ date: formatDate(r.date), Pengguna: +r.count }));
   const newestUsers = [...users]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .slice(0, 5);
@@ -320,10 +321,10 @@ export default function AdminDashboard() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Pengguna', value: stats.users, icon: <Users className="w-6 h-6 text-emerald-500" />, bg: 'bg-emerald-500/10' },
-          { label: 'Total Postingan', value: stats.posts, icon: <MessageSquare className="w-6 h-6 text-blue-500" />, bg: 'bg-blue-500/10' },
-          { label: 'Data Mood Masuk', value: analytics?.moodDistribution?.reduce((a, r) => a + parseInt(r.count), 0) ?? '—', icon: <Activity className="w-6 h-6 text-amber-500" />, bg: 'bg-amber-500/10' },
-          { label: 'Daftar Hari Ini', value: userChart?.find(r => r.date === formatDate(new Date().toLocaleDateString('en-CA')))?.Pengguna ?? 0, icon: <UserPlus className="w-6 h-6 text-rose-500" />, bg: 'bg-rose-500/10' },
+          { label: 'Total Pengguna',   value: stats.users,       icon: <Users className="w-6 h-6 text-emerald-500" />,  bg: 'bg-emerald-500/10' },
+          { label: 'Total Postingan',  value: stats.posts,       icon: <MessageSquare className="w-6 h-6 text-blue-500" />, bg: 'bg-blue-500/10' },
+          { label: 'Data Mood Masuk',  value: analytics?.moodDistribution?.reduce((a,r) => a + parseInt(r.count), 0) ?? '—', icon: <Activity className="w-6 h-6 text-amber-500" />, bg: 'bg-amber-500/10' },
+          { label: 'Daftar Hari Ini',  value: userChart?.find(r => r.date === formatDate(new Date().toLocaleDateString('en-CA')))?.Pengguna ?? 0, icon: <UserPlus className="w-6 h-6 text-rose-500" />, bg: 'bg-rose-500/10' },
         ].map((s, i) => (
           <div key={i} className="glass-card p-5 flex items-center gap-4">
             <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${s.bg}`}>{s.icon}</div>
@@ -391,9 +392,9 @@ export default function AdminDashboard() {
                 <YAxis tick={{ fontSize: 11, fill: 'var(--t-muted)' }} allowDecimals={false} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend formatter={v => MOOD_LABELS[v] || v} />
-                <Line type="monotone" dataKey="happy" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="happy"   stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
                 <Line type="monotone" dataKey="neutral" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="sad" stroke="#f43f5e" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="sad"     stroke="#f43f5e" strokeWidth={2} dot={{ r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -422,11 +423,11 @@ export default function AdminDashboard() {
                 <div key={u.id || i} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white shadow-inner select-none"
-                      style={{
-                        background: `hsla(${(u.username.charCodeAt(0) || 0) * 45 % 360}, 55%, 62%, 0.15)`,
-                        color: `hsl(${(u.username.charCodeAt(0) || 0) * 45 % 360}, 55%, 62%)`,
-                        border: `1px solid hsla(${(u.username.charCodeAt(0) || 0) * 45 % 360}, 55%, 62%, 0.3)`
-                      }}>
+                         style={{ 
+                           background: `hsla(${(u.username.charCodeAt(0) || 0) * 45 % 360}, 55%, 62%, 0.15)`,
+                           color: `hsl(${(u.username.charCodeAt(0) || 0) * 45 % 360}, 55%, 62%)`,
+                           border: `1px solid hsla(${(u.username.charCodeAt(0) || 0) * 45 % 360}, 55%, 62%, 0.3)`
+                         }}>
                       {u.username.charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -478,7 +479,7 @@ export default function AdminDashboard() {
                     <td className="py-3 px-2 text-sm font-medium">@{u.username}</td>
                     <td className="py-3 px-2 text-sm">
                       <span className={`px-2 py-1 rounded text-xs font-bold 
-                        ${u.role === 'admin' ? 'bg-rose-500/10 text-rose-500' :
+                        ${u.role === 'admin' ? 'bg-rose-500/10 text-rose-500' : 
                           'bg-emerald-500/10 text-emerald-500'}`}>
                         {u.role.toUpperCase()}
                       </span>
@@ -570,7 +571,7 @@ export default function AdminDashboard() {
             <h2 className="text-xl font-bold">Moderasi Safe Space</h2>
             <p className="text-xs text-[var(--t-muted)] font-medium">Hapus postingan anonim yang dinilai tidak pantas secara massal.</p>
           </div>
-
+          
           <div className="flex items-center gap-3">
             {filteredPosts.length > 0 && (
               <button
@@ -580,7 +581,7 @@ export default function AdminDashboard() {
                 {filteredPosts.every(p => selectedPosts.includes(p.id)) ? 'Batal Pilih' : 'Pilih Semua'}
               </button>
             )}
-
+            
             {selectedPosts.length > 0 && (
               <button
                 onClick={handleBulkDeletePosts}
@@ -596,20 +597,20 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 p-4 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border)] animate-fade-in">
           <div>
             <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--t-secondary)' }}>Cari Kata Kunci / @username / #saluran</label>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Ketik kata kunci pencarian..."
+            <input 
+              type="text" 
+              value={searchQuery} 
+              onChange={e => setSearchQuery(e.target.value)} 
+              placeholder="Ketik kata kunci pencarian..." 
               className="input-field py-2 text-xs rounded-xl"
             />
           </div>
           <div>
             <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--t-secondary)' }}>Filter Berdasarkan Tanggal</label>
-            <input
-              type="date"
-              value={searchDate}
-              onChange={e => setSearchDate(e.target.value)}
+            <input 
+              type="date" 
+              value={searchDate} 
+              onChange={e => setSearchDate(e.target.value)} 
               className="input-field py-2 text-xs rounded-xl cursor-pointer"
               style={{ colorScheme: theme === 'dark' ? 'dark' : 'light' }}
             />
@@ -625,9 +626,9 @@ export default function AdminDashboard() {
             {filteredPosts.map(post => {
               const isChecked = selectedPosts.includes(post.id);
               return (
-                <div key={post.id}
-                  className={`p-4 rounded-xl border flex items-start gap-4 transition-all duration-150 ${isChecked ? 'border-rose-500 bg-rose-500/5 shadow-[0_0_15px_rgba(244,63,94,0.05)]' : 'border-[var(--border)] bg-[var(--bg-subtle)]'}`}>
-
+                <div key={post.id} 
+                     className={`p-4 rounded-xl border flex items-start gap-4 transition-all duration-150 ${isChecked ? 'border-rose-500 bg-rose-500/5 shadow-[0_0_15px_rgba(244,63,94,0.05)]' : 'border-[var(--border)] bg-[var(--bg-subtle)]'}`}>
+                  
                   {/* Select Checkbox */}
                   <div className="pt-1 select-none">
                     <input
@@ -647,7 +648,7 @@ export default function AdminDashboard() {
                     </div>
                     <p className="text-sm leading-relaxed text-[var(--t-secondary)] break-words">{post.content}</p>
                   </div>
-
+                  
                   <button onClick={() => handleDeletePost(post.id)} className="shrink-0 text-rose-500 hover:bg-rose-500/10 p-2 rounded-lg self-start transition-colors">
                     <Trash2 className="w-5 h-5" />
                   </button>
@@ -666,31 +667,31 @@ export default function AdminDashboard() {
               <X className="w-5 h-5" />
             </button>
             <h2 className="text-xl font-bold mb-4">{editUser ? 'Edit Role Pengguna' : 'Tambah Pengguna Baru'}</h2>
-
+            
             <form onSubmit={handleSaveUser} className="space-y-4">
               {!editUser && (
                 <>
                   <div>
                     <label className="block text-sm mb-1" style={{ color: 'var(--t-secondary)' }}>Username</label>
                     <input type="text" required
-                      value={userForm.username} onChange={e => setUserForm({ ...userForm, username: e.target.value })}
+                      value={userForm.username} onChange={e => setUserForm({...userForm, username: e.target.value})}
                       className="input-field w-full" placeholder="username" />
                   </div>
                   <div>
                     <label className="block text-sm mb-1" style={{ color: 'var(--t-secondary)' }}>Email (Opsional)</label>
                     <input type="email"
-                      value={userForm.email} onChange={e => setUserForm({ ...userForm, email: e.target.value })}
+                      value={userForm.email} onChange={e => setUserForm({...userForm, email: e.target.value})}
                       className="input-field w-full" placeholder="email@contoh.com" />
                   </div>
                   <div>
                     <label className="block text-sm mb-1" style={{ color: 'var(--t-secondary)' }}>Password</label>
                     <input type="password" required
-                      value={userForm.password} onChange={e => setUserForm({ ...userForm, password: e.target.value })}
+                      value={userForm.password} onChange={e => setUserForm({...userForm, password: e.target.value})}
                       className="input-field w-full" placeholder="••••••••" />
                   </div>
                 </>
               )}
-
+              
               {editUser && (
                 <div className="mb-4">
                   <p className="text-sm" style={{ color: 'var(--t-secondary)' }}>Mengedit role untuk: <strong style={{ color: 'var(--t-primary)' }}>@{editUser.username}</strong></p>
@@ -699,7 +700,7 @@ export default function AdminDashboard() {
 
               <div>
                 <label className="block text-sm mb-1" style={{ color: 'var(--t-secondary)' }}>Role</label>
-                <select value={userForm.role} onChange={e => setUserForm({ ...userForm, role: e.target.value })} className="input-field w-full cursor-pointer">
+                <select value={userForm.role} onChange={e => setUserForm({...userForm, role: e.target.value})} className="input-field w-full cursor-pointer">
                   <option value="user">User Biasa</option>
                   <option value="admin">Admin</option>
                 </select>
@@ -722,7 +723,7 @@ export default function AdminDashboard() {
               <X className="w-5 h-5" />
             </button>
             <h2 className="text-xl font-bold mb-4">{editChannel ? 'Edit Saluran Obrolan' : 'Buat Saluran Obrolan Baru'}</h2>
-
+            
             <form onSubmit={handleSaveChannel} className="space-y-4">
               <div>
                 <label className="block text-sm mb-1" style={{ color: 'var(--t-secondary)' }}>Nama Saluran</label>
@@ -731,9 +732,9 @@ export default function AdminDashboard() {
                     const val = e.target.value;
                     if (!editChannel) {
                       const autoSlug = val.toLowerCase().trim().replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '-');
-                      setChannelForm({ ...channelForm, name: val, slug: autoSlug });
+                      setChannelForm({...channelForm, name: val, slug: autoSlug});
                     } else {
-                      setChannelForm({ ...channelForm, name: val });
+                      setChannelForm({...channelForm, name: val});
                     }
                   }}
                   className="input-field w-full" placeholder="Contoh: 💬-curhat-kerjaan atau #healing-tips" />
@@ -742,14 +743,14 @@ export default function AdminDashboard() {
               <div>
                 <label className="block text-sm mb-1" style={{ color: 'var(--t-secondary)' }}>Slug Saluran</label>
                 <input type="text" required disabled={!!editChannel}
-                  value={channelForm.slug} onChange={e => setChannelForm({ ...channelForm, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '-') })}
+                  value={channelForm.slug} onChange={e => setChannelForm({...channelForm, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '-')})}
                   className="input-field w-full font-mono text-xs disabled:opacity-50 disabled:cursor-not-allowed" placeholder="curhat-kerjaan" />
               </div>
 
               <div>
                 <label className="block text-sm mb-1" style={{ color: 'var(--t-secondary)' }}>Deskripsi Saluran (Opsional)</label>
                 <textarea
-                  value={channelForm.description} onChange={e => setChannelForm({ ...channelForm, description: e.target.value })}
+                  value={channelForm.description} onChange={e => setChannelForm({...channelForm, description: e.target.value})}
                   className="input-field w-full text-xs min-h-[80px] resize-none" placeholder="Masukkan deskripsi singkat fungsi saluran..." />
               </div>
 
