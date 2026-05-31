@@ -8,7 +8,7 @@ export default function Settings() {
   const [formData, setFormData] = useState({ username: '', email: '', password: '', birth_date: '', gender: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const API_URL = 'http://localhost:5000/api';
+  const API_URL = 'https://be-mindease.onrender.com/api';
 
   useEffect(() => {
     if (token) fetchProfile();

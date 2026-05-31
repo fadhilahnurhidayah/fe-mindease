@@ -29,7 +29,7 @@ export default function Chatbot() {
   // 1. Memuat daftar sesi saat halaman dimuat atau token berubah
   const fetchSessions = () => {
     if (token) {
-      fetch('http://localhost:5000/api/chat/sessions', {
+      fetch('https://be-mindease.onrender.com/api/chat/sessions', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       .then(res => res.ok ? res.json() : [])
@@ -54,7 +54,7 @@ export default function Chatbot() {
   useEffect(() => {
     if (token && currentSessionId) {
       setIsLoading(true);
-      fetch(`http://localhost:5000/api/chat/history?session_id=${currentSessionId}`, {
+      fetch(`https://be-mindease.onrender.com/api/chat/history?session_id=${currentSessionId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       .then(res => {
@@ -129,7 +129,7 @@ export default function Chatbot() {
     
     setIsLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/chat/sessions/${sessionId}`, {
+      const res = await fetch(`https://be-mindease.onrender.com/api/chat/sessions/${sessionId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -156,7 +156,7 @@ export default function Chatbot() {
   const handleTogglePin = async (sessionId, currentPin) => {
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/chat/sessions/${sessionId}`, {
+      const res = await fetch(`https://be-mindease.onrender.com/api/chat/sessions/${sessionId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ is_pinned: !currentPin })
@@ -178,7 +178,7 @@ export default function Chatbot() {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:5000/api/chat/sessions/${sessionId}`, {
+      const res = await fetch(`https://be-mindease.onrender.com/api/chat/sessions/${sessionId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ title: newTitle.trim() })
@@ -245,7 +245,7 @@ export default function Chatbot() {
       
       // Jika ini adalah pesan pertama (sesi baru), buat sesinya sekarang!
       if (!targetSessionId && token) {
-        const createRes = await fetch('http://localhost:5000/api/chat/sessions', {
+        const createRes = await fetch('https://be-mindease.onrender.com/api/chat/sessions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
         });
@@ -255,7 +255,7 @@ export default function Chatbot() {
           setCurrentSessionId(targetSessionId);
           
           // Background Task: Minta AI buatkan judul
-          fetch(`http://localhost:5000/api/chat/sessions/${targetSessionId}/generate-title`, {
+          fetch(`https://be-mindease.onrender.com/api/chat/sessions/${targetSessionId}/generate-title`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ message: text })
@@ -267,7 +267,7 @@ export default function Chatbot() {
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const activeMode = overrideMode ?? mode;
-      const res = await fetch('http://localhost:5000/api/chat/agent', {
+      const res = await fetch('https://be-mindease.onrender.com/api/chat/agent', {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({ message: text, currentState, session_id: targetSessionId, mode: activeMode })
@@ -308,7 +308,7 @@ export default function Chatbot() {
       id: Date.now(), sender: 'user', text: "Saya ingin melihat hasil analisisnya sekarang."
     }]);
 
-    fetch('http://localhost:5000/api/chat/predict', {
+    fetch('https://be-mindease.onrender.com/api/chat/predict', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ features: stateToPredict })
@@ -325,7 +325,7 @@ export default function Chatbot() {
       }]);
 
       if (token) {
-        fetch('http://localhost:5000/api/chat/save-result', {
+        fetch('https://be-mindease.onrender.com/api/chat/save-result', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
@@ -377,7 +377,7 @@ export default function Chatbot() {
       }]);
 
       if (token) {
-        fetch('http://localhost:5000/api/chat/save-result', {
+        fetch('https://be-mindease.onrender.com/api/chat/save-result', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({

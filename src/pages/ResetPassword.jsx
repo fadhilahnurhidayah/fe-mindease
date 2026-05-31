@@ -17,7 +17,7 @@ export default function ResetPassword() {
   const [success, setSuccess] = useState(false);
   const [message, setMessage] = useState('');
 
-  const API_URL = 'http://localhost:5000/api';
+  const API_URL = 'https://be-mindease.onrender.com/api';
 
   const handleReset = async (e) => {
     e.preventDefault();
