@@ -1,4 +1,4 @@
-import { API_URL } from '../config';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { KeyRound, Lock, Eye, EyeOff, Loader2, CheckCircle2, ArrowRight } from 'lucide-react';
@@ -12,7 +12,7 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -46,7 +46,7 @@ export default function ResetPassword() {
         body: JSON.stringify({ token, password })
       });
       const data = await res.json();
-      
+
       if (res.ok) {
         setSuccess(true);
         setMessage(data.message);

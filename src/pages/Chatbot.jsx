@@ -1,4 +1,4 @@
-import { API_URL } from '../config';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2, Sparkles, Plus, Trash2, Menu, X, Pin, PinOff, Edit2, MoreVertical } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -21,7 +21,7 @@ export default function Chatbot() {
   // State untuk Sesi Obrolan
   const [sessions, setSessions] = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
-  
+
   // State UI Tambahan
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState(null); // untuk dropdown opsi di tiap sesi
@@ -33,14 +33,14 @@ export default function Chatbot() {
       fetch(`${API_URL}/chat/sessions`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
-      .then(res => res.ok ? res.json() : [])
-      .then(data => {
-        setSessions(data);
-        if (data && data.length > 0 && !currentSessionId) {
-          setCurrentSessionId(data[0].id);
-        }
-      })
-      .catch(err => console.error("Gagal mengambil daftar sesi:", err));
+        .then(res => res.ok ? res.json() : [])
+        .then(data => {
+          setSessions(data);
+          if (data && data.length > 0 && !currentSessionId) {
+            setCurrentSessionId(data[0].id);
+          }
+        })
+        .catch(err => console.error("Gagal mengambil daftar sesi:", err));
     } else {
       setSessions([]);
       setCurrentSessionId(null);
@@ -58,15 +58,15 @@ export default function Chatbot() {
       fetch(`${API_URL}/chat/history?session_id=${currentSessionId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
-      .then(res => {
-        if (!res.ok) throw new Error('Gagal memuat riwayat sesi');
-        return res.json();
-      })
-      .then(history => {
-        if (history) setMessages(history);
-      })
-      .catch(err => console.error("Gagal mengambil riwayat chat sesi:", err))
-      .finally(() => setIsLoading(false));
+        .then(res => {
+          if (!res.ok) throw new Error('Gagal memuat riwayat sesi');
+          return res.json();
+        })
+        .then(history => {
+          if (history) setMessages(history);
+        })
+        .catch(err => console.error("Gagal mengambil riwayat chat sesi:", err))
+        .finally(() => setIsLoading(false));
     }
   }, [token, currentSessionId]);
 
@@ -106,7 +106,7 @@ export default function Chatbot() {
   // Handler membuat sesi baru (Lazy Creation)
   const handleCreateSession = () => {
     if (window.innerWidth < 768) setIsSidebarOpen(false);
-    
+
     // Hanya reset state UI, jangan buat di database dulu
     setCurrentSessionId(null);
     setMessages([
@@ -127,7 +127,7 @@ export default function Chatbot() {
   const handleDeleteSession = async (sessionId) => {
     if (!token || !sessionId) return;
     if (!window.confirm('Apakah kamu yakin ingin menghapus sesi obrolan ini secara permanen?')) return;
-    
+
     setIsLoading(true);
     try {
       const res = await fetch(`${API_URL}/chat/sessions/${sessionId}`, {
@@ -135,10 +135,10 @@ export default function Chatbot() {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Gagal menghapus sesi');
-      
+
       const updatedSessions = sessions.filter(s => s.id !== sessionId);
       setSessions(updatedSessions);
-      
+
       if (updatedSessions.length > 0) {
         if (currentSessionId === sessionId) {
           setCurrentSessionId(updatedSessions[0].id);
@@ -219,7 +219,7 @@ export default function Chatbot() {
       mental_risk_score: null,
       support_category: null
     }));
-    
+
     // Kirim pesan pemicu asesmen terpandu
     handleSend(null, "Saya ingin memulai sesi asesmen kesehatan mental saya secara detail.", 'assessment');
   };
@@ -243,7 +243,7 @@ export default function Chatbot() {
 
     try {
       let targetSessionId = currentSessionId;
-      
+
       // Jika ini adalah pesan pertama (sesi baru), buat sesinya sekarang!
       if (!targetSessionId && token) {
         const createRes = await fetch(`${API_URL}/chat/sessions`, {
@@ -254,7 +254,7 @@ export default function Chatbot() {
           const newSession = await createRes.json();
           targetSessionId = newSession.id;
           setCurrentSessionId(targetSessionId);
-          
+
           // Background Task: Minta AI buatkan judul
           fetch(`${API_URL}/chat/sessions/${targetSessionId}/generate-title`, {
             method: 'POST',
@@ -274,9 +274,9 @@ export default function Chatbot() {
         body: JSON.stringify({ message: text, currentState, session_id: targetSessionId, mode: activeMode })
       });
       const data = await res.json();
-      
+
       setMessages(prev => [...prev, {
-        id: Date.now()+1, sender: 'ai',
+        id: Date.now() + 1, sender: 'ai',
         text: data.reply || "Maaf, saya gagal memproses pesanmu.",
         isCrisis: data.is_crisis,
         hotlines: data.hotlines || []
@@ -295,7 +295,7 @@ export default function Chatbot() {
     } catch (error) {
       console.error(error);
       setMessages(prev => [...prev, {
-        id: Date.now()+1, sender: 'ai',
+        id: Date.now() + 1, sender: 'ai',
         text: "Terjadi kesalahan saat menghubungi server AI."
       }]);
     } finally {
@@ -314,85 +314,85 @@ export default function Chatbot() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ features: stateToPredict })
     })
-    .then(r => r.json())
-    .then(prediction => {
-      setMessages(msgs => [...msgs, {
-        id: Date.now() + 2,
-        sender: 'ai',
-        type: 'result',
-        riskLevel: prediction.risk_level,
-        burnoutScore: prediction.burnout_score,
-        recommendation: prediction.genai_recommendation
-      }]);
+      .then(r => r.json())
+      .then(prediction => {
+        setMessages(msgs => [...msgs, {
+          id: Date.now() + 2,
+          sender: 'ai',
+          type: 'result',
+          riskLevel: prediction.risk_level,
+          burnoutScore: prediction.burnout_score,
+          recommendation: prediction.genai_recommendation
+        }]);
 
-      if (token) {
-        fetch(`${API_URL}/chat/save-result`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({
-            riskLevel: prediction.risk_level,
-            burnoutScore: prediction.burnout_score,
-            recommendation: prediction.genai_recommendation,
-            session_id: currentSessionId
+        if (token) {
+          fetch(`${API_URL}/chat/save-result`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({
+              riskLevel: prediction.risk_level,
+              burnoutScore: prediction.burnout_score,
+              recommendation: prediction.genai_recommendation,
+              session_id: currentSessionId
+            })
           })
-        })
-        .then(() => fetchSessions())
-        .catch(err => console.error("Gagal menyimpan hasil prediksi ke DB:", err));
-      }
-    })
-    .catch(err => {
-      console.warn("⚠️ FastAPI Offline. Mengaktifkan Analisis Heuristik Lokal Terintegrasi...", err);
-      
-      // Hitung skor kecemasan, depresi, stres secara lokal untuk perkiraan risiko
-      const stress = parseFloat(stateToPredict.stress_level || 5);
-      const anxiety = parseFloat(stateToPredict.anxiety_score || 5);
-      const depression = parseFloat(stateToPredict.depression_score || 5);
-      const averageScore = (stress + anxiety + depression) / 3;
-      
-      let riskLevel = 'Low';
-      let recommendation = "Keadaan emosionalmu tampak cukup stabil. Tetap pertahankan pola hidup seimbang dan luangkan waktu untuk relaksasi ya.";
-      
-      if (averageScore >= 7) {
-        riskLevel = 'High';
-        recommendation = "Kamu terdeteksi sedang berada di bawah tekanan mental yang sangat tinggi. Sangat disarankan untuk beristirahat sejenak, melakukan teknik pernapasan dalam, dan berbicara dengan konselor atau orang terdekat untuk meredakan kecemasanmu.";
-      } else if (averageScore >= 4) {
-        riskLevel = 'Medium';
-        recommendation = "Ada beberapa tanda kelelahan emosional sedang. Cobalah untuk membagi waktu dengan lebih seimbang antara belajar dan bersantai, serta beristirahatlah yang cukup.";
-      }
-      
-      const burnoutScore = Math.min(10, Math.max(0, parseFloat((averageScore * 1.1).toFixed(1))));
-      
-      const prediction = {
-        risk_level: riskLevel,
-        burnout_score: burnoutScore,
-        genai_recommendation: recommendation
-      };
+            .then(() => fetchSessions())
+            .catch(err => console.error("Gagal menyimpan hasil prediksi ke DB:", err));
+        }
+      })
+      .catch(err => {
+        console.warn("⚠️ FastAPI Offline. Mengaktifkan Analisis Heuristik Lokal Terintegrasi...", err);
 
-      setMessages(msgs => [...msgs, {
-        id: Date.now() + 2,
-        sender: 'ai',
-        type: 'result',
-        riskLevel: prediction.risk_level,
-        burnoutScore: prediction.burnout_score,
-        recommendation: prediction.genai_recommendation
-      }]);
+        // Hitung skor kecemasan, depresi, stres secara lokal untuk perkiraan risiko
+        const stress = parseFloat(stateToPredict.stress_level || 5);
+        const anxiety = parseFloat(stateToPredict.anxiety_score || 5);
+        const depression = parseFloat(stateToPredict.depression_score || 5);
+        const averageScore = (stress + anxiety + depression) / 3;
 
-      if (token) {
-        fetch(`${API_URL}/chat/save-result`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({
-            riskLevel: prediction.risk_level,
-            burnoutScore: prediction.burnout_score,
-            recommendation: prediction.genai_recommendation,
-            session_id: currentSessionId
+        let riskLevel = 'Low';
+        let recommendation = "Keadaan emosionalmu tampak cukup stabil. Tetap pertahankan pola hidup seimbang dan luangkan waktu untuk relaksasi ya.";
+
+        if (averageScore >= 7) {
+          riskLevel = 'High';
+          recommendation = "Kamu terdeteksi sedang berada di bawah tekanan mental yang sangat tinggi. Sangat disarankan untuk beristirahat sejenak, melakukan teknik pernapasan dalam, dan berbicara dengan konselor atau orang terdekat untuk meredakan kecemasanmu.";
+        } else if (averageScore >= 4) {
+          riskLevel = 'Medium';
+          recommendation = "Ada beberapa tanda kelelahan emosional sedang. Cobalah untuk membagi waktu dengan lebih seimbang antara belajar dan bersantai, serta beristirahatlah yang cukup.";
+        }
+
+        const burnoutScore = Math.min(10, Math.max(0, parseFloat((averageScore * 1.1).toFixed(1))));
+
+        const prediction = {
+          risk_level: riskLevel,
+          burnout_score: burnoutScore,
+          genai_recommendation: recommendation
+        };
+
+        setMessages(msgs => [...msgs, {
+          id: Date.now() + 2,
+          sender: 'ai',
+          type: 'result',
+          riskLevel: prediction.risk_level,
+          burnoutScore: prediction.burnout_score,
+          recommendation: prediction.genai_recommendation
+        }]);
+
+        if (token) {
+          fetch(`${API_URL}/chat/save-result`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({
+              riskLevel: prediction.risk_level,
+              burnoutScore: prediction.burnout_score,
+              recommendation: prediction.genai_recommendation,
+              session_id: currentSessionId
+            })
           })
-        })
-        .then(() => fetchSessions())
-        .catch(dbErr => console.error("Gagal menyimpan hasil prediksi ke DB:", dbErr));
-      }
-    })
-    .finally(() => setIsLoading(false));
+            .then(() => fetchSessions())
+            .catch(dbErr => console.error("Gagal menyimpan hasil prediksi ke DB:", dbErr));
+        }
+      })
+      .finally(() => setIsLoading(false));
   };
 
   const FEATURE_KEYS = [
@@ -401,7 +401,7 @@ export default function Chatbot() {
     'sleep_hours', 'physical_activity', 'social_support', 'screen_time',
     'internet_usage', 'financial_stress', 'family_expectation'
   ];
-  
+
   const filledFeatures = Object.keys(currentState)
     .filter(k => FEATURE_KEYS.includes(k) && currentState[k] !== null).length;
   const totalFeatures = FEATURE_KEYS.length;
@@ -415,14 +415,14 @@ export default function Chatbot() {
       <div className="max-w-md mx-auto my-12 p-8 rounded-3xl border border-[var(--border)] glass-panel text-center space-y-6 animate-scale-in relative overflow-hidden">
         {/* Glow effect */}
         <div className="absolute -top-24 -left-24 w-48 h-48 rounded-full blur-3xl opacity-30"
-             style={{ background: 'var(--bg-brand)' }} />
+          style={{ background: 'var(--bg-brand)' }} />
         <div className="absolute -bottom-24 -right-24 w-48 h-48 rounded-full blur-3xl opacity-30"
-             style={{ background: 'var(--bg-brand)' }} />
+          style={{ background: 'var(--bg-brand)' }} />
 
         <div className="w-20 h-20 mx-auto bg-[var(--bg-brand)] rounded-3xl flex items-center justify-center transform rotate-3 shadow-lg shadow-[var(--bg-brand)]/20">
           <Bot className="w-10 h-10 text-white" />
         </div>
-        
+
         <div className="space-y-2 relative z-10">
           <h2 className="text-2xl font-extrabold" style={{ color: 'var(--t-primary)' }}>Akses MindEase AI Chat</h2>
           <p className="text-sm leading-relaxed" style={{ color: 'var(--t-secondary)' }}>
@@ -444,17 +444,17 @@ export default function Chatbot() {
 
   return (
     <div className="flex h-[calc(100vh-80px)] -mt-4 -mx-4 md:-mt-8 md:-mx-8 overflow-hidden animate-fade-in relative">
-      
+
       {/* Sidebar Overlay (Mobile) */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black/50 md:hidden backdrop-blur-sm"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar (Gemini Style) */}
-      <div 
+      <div
         className={`fixed md:static inset-y-0 left-0 z-50 w-64 flex flex-col transition-transform duration-300 ease-in-out border-r border-[var(--border)]
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
         style={{ background: 'var(--bg-surface)' }}
@@ -467,8 +467,8 @@ export default function Chatbot() {
           >
             <Plus className="w-4 h-4" /> Percakapan Baru
           </button>
-          <button 
-            className="md:hidden p-2 ml-2 text-[var(--t-secondary)]" 
+          <button
+            className="md:hidden p-2 ml-2 text-[var(--t-secondary)]"
             onClick={() => setIsSidebarOpen(false)}
           >
             <X className="w-5 h-5" />
@@ -486,8 +486,8 @@ export default function Chatbot() {
             <div className="mb-4">
               <p className="text-[10px] font-bold uppercase tracking-wider px-3 mb-2 opacity-60" style={{ color: 'var(--t-primary)' }}>Disematkan</p>
               {pinnedSessions.map(s => (
-                <SessionItem 
-                  key={s.id} session={s} currentSessionId={currentSessionId} 
+                <SessionItem
+                  key={s.id} session={s} currentSessionId={currentSessionId}
                   handleSwitchSession={handleSwitchSession}
                   activeMenuId={activeMenuId} setActiveMenuId={setActiveMenuId}
                   handleTogglePin={handleTogglePin} handleRenameSession={handleRenameSession} handleDeleteSession={handleDeleteSession}
@@ -500,8 +500,8 @@ export default function Chatbot() {
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider px-3 mb-2 opacity-60" style={{ color: 'var(--t-primary)' }}>Terbaru</p>
               {recentSessions.map(s => (
-                <SessionItem 
-                  key={s.id} session={s} currentSessionId={currentSessionId} 
+                <SessionItem
+                  key={s.id} session={s} currentSessionId={currentSessionId}
                   handleSwitchSession={handleSwitchSession}
                   activeMenuId={activeMenuId} setActiveMenuId={setActiveMenuId}
                   handleTogglePin={handleTogglePin} handleRenameSession={handleRenameSession} handleDeleteSession={handleDeleteSession}
@@ -514,11 +514,11 @@ export default function Chatbot() {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col h-full bg-[var(--bg-subtle)] relative max-w-4xl mx-auto w-full shadow-2xl">
-        
+
         {/* Header Chat */}
         <div className="p-4 flex items-center gap-3 border-b border-[var(--border)]" style={{ background: 'var(--bg-surface)' }}>
-          <button 
-            className="md:hidden p-2 -ml-2 rounded-lg hover:bg-[var(--bg-subtle)] transition-colors" 
+          <button
+            className="md:hidden p-2 -ml-2 rounded-lg hover:bg-[var(--bg-subtle)] transition-colors"
             style={{ color: 'var(--t-secondary)' }}
             onClick={() => setIsSidebarOpen(true)}
           >
@@ -527,16 +527,16 @@ export default function Chatbot() {
 
           <div className="relative">
             <div className="absolute inset-0 rounded-full blur-sm opacity-70"
-                 style={{ background:'linear-gradient(135deg,#16a0a0,#0e6363)' }} />
+              style={{ background: 'linear-gradient(135deg,#16a0a0,#0e6363)' }} />
             <div className="relative w-9 h-9 rounded-full flex items-center justify-center"
-                 style={{ background:'linear-gradient(135deg,#16a0a0,#0e6363)', boxShadow:'0 4px 16px rgba(22,160,160,0.4)' }}>
+              style={{ background: 'linear-gradient(135deg,#16a0a0,#0e6363)', boxShadow: '0 4px 16px rgba(22,160,160,0.4)' }}>
               <Bot className="w-4 h-4 text-white" />
             </div>
             <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2"
-                 style={{ borderColor:'var(--bg-surface)' }} />
+              style={{ borderColor: 'var(--bg-surface)' }} />
           </div>
           <div>
-            <h2 className="font-bold text-sm" style={{ color:'var(--t-primary)' }}>MindEase AI Companion</h2>
+            <h2 className="font-bold text-sm" style={{ color: 'var(--t-primary)' }}>MindEase AI Companion</h2>
             <p className="text-[10px] text-emerald-500 flex items-center gap-1 font-medium">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
               Online — Selalu ada untukmu
@@ -547,7 +547,7 @@ export default function Chatbot() {
         {/* Guest Mode Banner */}
         {!token && (
           <div className="px-4 py-2 text-center text-xs font-semibold flex items-center justify-center gap-1.5"
-               style={{ background: 'rgba(245,158,11,0.08)', borderBottom: '1px solid rgba(245,158,11,0.18)', color: '#d97706' }}>
+            style={{ background: 'rgba(245,158,11,0.08)', borderBottom: '1px solid rgba(245,158,11,0.18)', color: '#d97706' }}>
             ⚠️ Mode Tamu — Login untuk menyimpan riwayat obrolan AI secara persisten.
           </div>
         )}
@@ -563,10 +563,10 @@ export default function Chatbot() {
                 <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--t-primary)' }}>Halo, apa yang bisa saya bantu?</h3>
                 <p className="text-sm opacity-60" style={{ color: 'var(--t-primary)' }}>Pilih topik di bawah atau ketikkan keluh kesahmu.</p>
               </div>
-              {SUGGESTIONS.map((s,i) => (
+              {SUGGESTIONS.map((s, i) => (
                 <button key={i} onClick={() => handleSend(null, s)}
                   className="px-4 py-2 text-xs rounded-full font-medium transition-all duration-200"
-                  style={{ background:'rgba(22,160,160,0.12)', border:'1px solid rgba(22,160,160,0.25)', color:'var(--t-brand)' }}>
+                  style={{ background: 'rgba(22,160,160,0.12)', border: '1px solid rgba(22,160,160,0.25)', color: 'var(--t-brand)' }}>
                   {s}
                 </button>
               ))}
@@ -574,11 +574,11 @@ export default function Chatbot() {
           )}
 
           {messages.map(msg => (
-            <div key={msg.id} className={`flex ${msg.sender==='user' ? 'justify-end' : 'justify-start'} animate-slide-up`}>
+            <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`}>
               {msg.type === 'result' ? (
                 <div className="w-full max-w-[92%] rounded-2xl overflow-hidden animate-slide-up"
-                     style={{ border:'1px solid rgba(22,160,160,0.3)', boxShadow:'0 8px 32px rgba(22,160,160,0.15)' }}>
-                  <div className="p-4" style={{ background:'linear-gradient(135deg,#16a0a0,#0e6363)' }}>
+                  style={{ border: '1px solid rgba(22,160,160,0.3)', boxShadow: '0 8px 32px rgba(22,160,160,0.15)' }}>
+                  <div className="p-4" style={{ background: 'linear-gradient(135deg,#16a0a0,#0e6363)' }}>
                     <p className="text-white text-xs font-semibold uppercase tracking-widest opacity-80 mb-1">Hasil Analisis MindEase AI</p>
                     <div className="flex items-center gap-4">
                       <div>
@@ -595,58 +595,58 @@ export default function Chatbot() {
                       </div>
                     </div>
                   </div>
-                  <div className="p-4" style={{ background:'var(--bg-surface)' }}>
-                    <p className="text-xs font-semibold mb-2" style={{ color:'var(--t-brand)' }}>💙 Pesan untukmu</p>
-                    <p className="text-sm leading-relaxed" style={{ color:'var(--t-primary)' }}>{msg.recommendation}</p>
+                  <div className="p-4" style={{ background: 'var(--bg-surface)' }}>
+                    <p className="text-xs font-semibold mb-2" style={{ color: 'var(--t-brand)' }}>💙 Pesan untukmu</p>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--t-primary)' }}>{msg.recommendation}</p>
                   </div>
                 </div>
               ) : (
-              <div className={`flex gap-3 max-w-[90%] sm:max-w-[82%] ${msg.sender==='user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 self-end"
-                     style={msg.sender==='ai'
-                       ? { background:'linear-gradient(135deg,#16a0a0,#0e6363)', boxShadow:'0 2px 10px rgba(22,160,160,0.35)' }
-                       : { background:'var(--bg-input)', border:'1px solid var(--border)' }}>
-                  {msg.sender==='user'
-                    ? <User className="w-4 h-4" style={{ color:'var(--t-secondary)' }} />
-                    : <Bot className="w-4 h-4 text-white" />}
-                </div>
-                
-                <div className="flex flex-col gap-2 max-w-full">
-                  <div className="p-4 rounded-2xl text-sm leading-relaxed"
-                       style={msg.sender==='user' ? {
-                         background:'linear-gradient(135deg,#16a0a0,#0e6363)',
-                         color:'#fff', borderRadius:'1rem 0.25rem 1rem 1rem',
-                         boxShadow:'0 4px 20px rgba(22,160,160,0.25)',
-                       } : {
-                         background: 'var(--bg-surface)',
-                         border: '1px solid var(--border)',
-                         color: 'var(--t-primary)',
-                         borderRadius:'0.25rem 1rem 1rem 1rem',
-                         boxShadow:'0 4px 16px rgba(0,0,0,0.1)',
-                       }}>
-                    {msg.text}
+                <div className={`flex gap-3 max-w-[90%] sm:max-w-[82%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 self-end"
+                    style={msg.sender === 'ai'
+                      ? { background: 'linear-gradient(135deg,#16a0a0,#0e6363)', boxShadow: '0 2px 10px rgba(22,160,160,0.35)' }
+                      : { background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+                    {msg.sender === 'user'
+                      ? <User className="w-4 h-4" style={{ color: 'var(--t-secondary)' }} />
+                      : <Bot className="w-4 h-4 text-white" />}
                   </div>
-                  
-                  {msg.isCrisis && msg.hotlines && msg.hotlines.length > 0 && (
-                    <div className="flex flex-col gap-2 mt-1 animate-slide-up w-full">
-                      {msg.hotlines.map((h, i) => (
-                        <a key={i} href={`tel:${h.number}`} 
-                           className="flex items-center justify-between p-3 rounded-xl hover:opacity-80 transition-opacity cursor-pointer"
-                           style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}>
-                          <div>
-                            <p className="font-bold text-sm" style={{ color: 'var(--t-primary)' }}>{h.name}</p>
-                            <p className="text-xs" style={{ color: 'var(--t-secondary)' }}>{h.hours} {h.ext ? `• ${h.ext}` : ''}</p>
-                          </div>
-                          <div className="px-3 py-1.5 rounded-lg font-semibold text-sm flex items-center gap-2"
-                               style={{ background: 'rgba(22,160,160,0.1)', color: 'var(--t-brand)' }}>
-                            📞 {h.display || h.number}
-                          </div>
-                        </a>
-                      ))}
+
+                  <div className="flex flex-col gap-2 max-w-full">
+                    <div className="p-4 rounded-2xl text-sm leading-relaxed"
+                      style={msg.sender === 'user' ? {
+                        background: 'linear-gradient(135deg,#16a0a0,#0e6363)',
+                        color: '#fff', borderRadius: '1rem 0.25rem 1rem 1rem',
+                        boxShadow: '0 4px 20px rgba(22,160,160,0.25)',
+                      } : {
+                        background: 'var(--bg-surface)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--t-primary)',
+                        borderRadius: '0.25rem 1rem 1rem 1rem',
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+                      }}>
+                      {msg.text}
                     </div>
-                  )}
+
+                    {msg.isCrisis && msg.hotlines && msg.hotlines.length > 0 && (
+                      <div className="flex flex-col gap-2 mt-1 animate-slide-up w-full">
+                        {msg.hotlines.map((h, i) => (
+                          <a key={i} href={`tel:${h.number}`}
+                            className="flex items-center justify-between p-3 rounded-xl hover:opacity-80 transition-opacity cursor-pointer"
+                            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}>
+                            <div>
+                              <p className="font-bold text-sm" style={{ color: 'var(--t-primary)' }}>{h.name}</p>
+                              <p className="text-xs" style={{ color: 'var(--t-secondary)' }}>{h.hours} {h.ext ? `• ${h.ext}` : ''}</p>
+                            </div>
+                            <div className="px-3 py-1.5 rounded-lg font-semibold text-sm flex items-center gap-2"
+                              style={{ background: 'rgba(22,160,160,0.1)', color: 'var(--t-brand)' }}>
+                              📞 {h.display || h.number}
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
               )}
             </div>
           ))}
@@ -655,11 +655,11 @@ export default function Chatbot() {
             <div className="flex justify-start animate-slide-up">
               <div className="flex gap-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                     style={{ background:'linear-gradient(135deg,#16a0a0,#0e6363)' }}>
+                  style={{ background: 'linear-gradient(135deg,#16a0a0,#0e6363)' }}>
                   <Bot className="w-4 h-4 text-white" />
                 </div>
                 <div className="p-4 flex items-center gap-1.5"
-                     style={{ background:'var(--bg-surface)', border:'1px solid var(--border)', borderRadius:'0.25rem 1rem 1rem 1rem' }}>
+                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '0.25rem 1rem 1rem 1rem' }}>
                   <span className="typing-dot w-2 h-2 rounded-full inline-block bg-brand-400" />
                   <span className="typing-dot w-2 h-2 rounded-full inline-block bg-brand-400" />
                   <span className="typing-dot w-2 h-2 rounded-full inline-block bg-brand-400" />
@@ -685,7 +685,7 @@ export default function Chatbot() {
             </div>
             <div className="w-full bg-[rgba(22,160,160,0.1)] h-2 rounded-full overflow-hidden">
               <div className="h-full rounded-full transition-all duration-500"
-                   style={{ width: `${progressPercent}%`, background: 'linear-gradient(90deg, #16a0a0, #0e6363)' }} />
+                style={{ width: `${progressPercent}%`, background: 'linear-gradient(90deg, #16a0a0, #0e6363)' }} />
             </div>
             <p className="text-[10px] text-gray-400 mt-1.5">
               💡 AI sedang menganalisis perasaanmu secara kualitatif. Jawablah sesuai kondisi aslimu tanpa memikirkan angka ya.
@@ -697,19 +697,19 @@ export default function Chatbot() {
         <div className="p-4 border-t border-[var(--border)]" style={{ background: 'var(--bg-surface)' }}>
           {messages.length > 2 && (
             <div className="flex justify-end gap-2 mb-3">
-               {mode === 'chat' ? (
-                 <button onClick={handleStartAssessment} disabled={isLoading}
-                    className="text-xs px-4 py-1.5 rounded-full font-medium transition-colors border border-[var(--border)] hover:bg-[rgba(22,160,160,0.1)]"
-                    style={{ color: 'var(--t-brand)', background: 'var(--bg-surface)', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>
-                    🪄 Mulai Asesmen Kesehatan Mental
-                 </button>
-               ) : (
-                 <button onClick={() => { setMode('chat'); forcePredict(currentState); }} disabled={isLoading}
-                    className="text-xs px-4 py-1.5 rounded-full font-medium transition-colors text-white"
-                    style={{ background: progressPercent >= 100 ? 'linear-gradient(135deg, #16a0a0, #0e6363)' : 'var(--bg-brand)', boxShadow: '0 2px 8px rgba(22,160,160,0.3)' }}>
-                    {progressPercent >= 100 ? "🪄 Lihat Hasil Analisis Lengkap" : "🪄 Selesaikan & Analisis Sekarang (Gunakan Estimasi)"}
-                 </button>
-               )}
+              {mode === 'chat' ? (
+                <button onClick={handleStartAssessment} disabled={isLoading}
+                  className="text-xs px-4 py-1.5 rounded-full font-medium transition-colors border border-[var(--border)] hover:bg-[rgba(22,160,160,0.1)]"
+                  style={{ color: 'var(--t-brand)', background: 'var(--bg-surface)', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>
+                  🪄 Mulai Asesmen Kesehatan Mental
+                </button>
+              ) : (
+                <button onClick={() => { setMode('chat'); forcePredict(currentState); }} disabled={isLoading}
+                  className="text-xs px-4 py-1.5 rounded-full font-medium transition-colors text-white"
+                  style={{ background: progressPercent >= 100 ? 'linear-gradient(135deg, #16a0a0, #0e6363)' : 'var(--bg-brand)', boxShadow: '0 2px 8px rgba(22,160,160,0.3)' }}>
+                  {progressPercent >= 100 ? "🪄 Lihat Hasil Analisis Lengkap" : "🪄 Selesaikan & Analisis Sekarang (Gunakan Estimasi)"}
+                </button>
+              )}
             </div>
           )}
 
@@ -731,13 +731,13 @@ export default function Chatbot() {
 // Komponen Pembantu: Item Sesi di Sidebar
 function SessionItem({ session, currentSessionId, handleSwitchSession, activeMenuId, setActiveMenuId, handleTogglePin, handleRenameSession, handleDeleteSession }) {
   const isActive = currentSessionId === session.id;
-  
+
   return (
     <div className="relative group rounded-lg mb-1">
       <button
         onClick={() => handleSwitchSession(session.id)}
         className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2"
-        style={{ 
+        style={{
           background: isActive ? 'rgba(22,160,160,0.1)' : 'transparent',
           color: isActive ? 'var(--t-brand)' : 'var(--t-primary)'
         }}
@@ -748,15 +748,15 @@ function SessionItem({ session, currentSessionId, handleSwitchSession, activeMen
       {/* Tiga Titik Muncul saat Hover (Desktop) atau Aktif (Mobile) */}
       <div className={`absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-md cursor-pointer transition-opacity 
                       ${activeMenuId === session.id ? 'opacity-100 bg-[var(--bg-input)]' : 'opacity-0 group-hover:opacity-100'}`}
-           style={{ color: 'var(--t-secondary)' }}
-           onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === session.id ? null : session.id); }}>
+        style={{ color: 'var(--t-secondary)' }}
+        onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === session.id ? null : session.id); }}>
         <MoreVertical className="w-4 h-4" />
       </div>
 
       {/* Dropdown Menu Kecil */}
       {activeMenuId === session.id && (
         <div className="absolute right-2 top-8 w-36 rounded-xl shadow-xl border border-[var(--border)] z-50 overflow-hidden text-xs animate-fade-in"
-             style={{ background: 'var(--bg-surface)' }}>
+          style={{ background: 'var(--bg-surface)' }}>
           <button onClick={() => handleTogglePin(session.id, session.is_pinned)} className="w-full text-left px-3 py-2 hover:bg-[var(--bg-subtle)] flex items-center gap-2" style={{ color: 'var(--t-primary)' }}>
             {session.is_pinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
             {session.is_pinned ? 'Unpin' : 'Pin ke atas'}
